@@ -19,7 +19,7 @@
           <br>
           <p>For students: please use your school Google account.</p>
           <br>
-          <GoogleLogin :params="params" :renderParams="renderParams" :onSuccess="onSuccess" :onFailure="onFailure">Login</GoogleLogin>
+          <div id="g_id_signin"></div>
           <br>
       </div>
     </section>
@@ -27,12 +27,10 @@
 </template>
 
 <script>
-import GoogleLogin from 'vue-google-login'
 import PasswordReset from '@/components/PasswordReset'
 
 export default {
   components: {
-    GoogleLogin,
     PasswordReset
   },
   data() {
@@ -46,6 +44,7 @@ export default {
         eight: 50,
         longtitle: true
       },
+      isAuthenticating: false,
       loginForm: {
         email: '',
         password: ''
@@ -60,12 +59,41 @@ export default {
       showPasswordReset: false
     }
   },
+  mounted() {
+    // Load Google Identity Services script if not already loaded
+    if (!window.google || !window.google.accounts) {
+      const script = document.createElement('script');
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      script.onload = this.initializeGoogleSignIn;
+      document.head.appendChild(script);
+    } else {
+      this.initializeGoogleSignIn();
+    }
+  },
   methods: {
-    onSuccess(googleUser) {
-      console.log(googleUser);
-      this.$store.dispatch('glogin', googleUser);
+    initializeGoogleSignIn() {
+      window.google.accounts.id.initialize({
+        client_id: "921798240468-7ef6ep21omf9pv15m4ilpa07patqjeio.apps.googleusercontent.com",
+        callback: this.handleCredentialResponse
+      });
+      window.google.accounts.id.renderButton(
+        document.getElementById("g_id_signin"),
+        { theme: "outline", size: "large", width: 250 }
+      );
+    },
+    async handleCredentialResponse(googleUser) {
+      this.isAuthenticating = true;
+      try {
+        console.log(googleUser);
+        await this.$store.dispatch('glogin', googleUser);
+      } finally {
+        this.isAuthenticating = false;
+      }
     },
     onFailure(error) {
+      this.isAuthenticating = false;
       console.log("Google sign in failed: " + error)
       this.$alert("Google sign in failed.");
       

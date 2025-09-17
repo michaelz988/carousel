@@ -4,6 +4,7 @@ import createPersistedState from "vuex-persistedstate";
 import * as fb from '../firebase'
 import router from '../router'
 import AuthService from "../services/AuthService";
+import { jwtDecode } from "jwt-decode";
 
 Vue.use(Vuex)
 
@@ -42,8 +43,11 @@ const store = new Vuex.Store({
     async glogin({ commit }, gUser) {
       try {
         // sign user in
-        const token = gUser.getAuthResponse().id_token;
-        const gmail = gUser.getBasicProfile().getEmail();
+        const token = gUser.credential;
+        // Decode the JWT to get user info
+        const decoded = jwtDecode(token);
+        const gmail = decoded.email;
+
         const response = await AuthService.signin({email: gmail, credential: token});
         const activeUser = response.data;
         commit('setActiveUser', activeUser);

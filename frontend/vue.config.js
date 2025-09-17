@@ -4,6 +4,9 @@ module.exports = {
     devtool: 'source-map'
   },
   devServer: {
-    port: 8081
+    port: 8081,
+    headers: {
+    'Cross-Origin-Opener-Policy': 'unsafe-none'
+  }
   }
 }
