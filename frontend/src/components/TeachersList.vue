@@ -1,18 +1,15 @@
 <template>
-  <div class="p-modal">
-    <div class="p-container">
-      <a @click="$emit('close')">close</a>
+  <app-modal title="Teachers List" size="xl" @close="$emit('close')">
     <div class="row">
     <div class="col-lg-8">
-      <h4>Teachers List</h4>
-      <b-row>
+      <b-row class="align-items-center mb-2">
       <b-col>
       <b-form @submit.prevent>
-        <input type="text" placeholder="teacher's email" id="email" v-model.trim.lazy="email" required maxlength="64"> 
+        <input type="text" placeholder="teacher's email" id="email" v-model.trim.lazy="email" required maxlength="64">
       </b-form>
       </b-col>
-      <b-col>
-        <button @click="addTeacher()">Add</button>
+      <b-col cols="auto">
+        <b-button variant="primary" @click="addTeacher()">Add</b-button>
       </b-col>
       </b-row>
       
@@ -48,18 +45,18 @@
       </div>
     </div>
   </div>
-  </div>
-  </div>
+  </app-modal>
 </template>
 
 <script>
 import { mapState } from 'vuex'
 import TeacherDataService from "../services/TeacherDataService"
+import AppModal from "./AppModal"
 
 export default {
   name: "teachers-list",
   components: {
-    
+    AppModal
   },
   data() {
     return {

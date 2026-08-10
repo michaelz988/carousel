@@ -1,25 +1,19 @@
 <template>
-  <div class="c-modal">
-    <div class="c-container">
-      <a @click="$emit('close')">close</a>
-
-  <div>
-    <h5>Import a student roster</h5>
+  <app-modal title="Import a student roster" size="md" @close="$emit('close')">
     <upload-file :activeAssignment="activeAssignment"></upload-file>
-  </div>
-
-  </div>
-  </div>
+  </app-modal>
 </template>
 
 <script>
 import { mapState } from 'vuex'
 import UploadFile from "../components/UploadFile"
+import AppModal from "./AppModal"
 
 export default {
   name: "students-import",
   components: {
-    UploadFile
+    UploadFile,
+    AppModal
   },
   data() {
     return {

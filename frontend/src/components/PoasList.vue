@@ -1,10 +1,7 @@
 <template>
-  <div class="p-modal">
-    <div class="p-container">
-      <a id="closebutton" @click="$emit('close')">close</a>
+  <app-modal title="POAS Already Taken" size="xl" @close="$emit('close')">
     <div class="row">
     <div class="col-lg-8">
-      <h4>POAS Already Taken</h4>
       <div>
         <b-table striped hover sticky-header="600px" :items="poases" :fields="fields"
           sort-icon-left
@@ -32,17 +29,19 @@
       </div>
     </div>
   </div>
-
-  </div>
-  </div>
+  </app-modal>
 </template>
 
 <script>
 import { mapState } from 'vuex'
 import PoasDataService from "../services/PoasDataService"
+import AppModal from "./AppModal"
 
 export default {
   name: "poases-list",
+  components: {
+    AppModal
+  },
   data() {
     return {
       fields: [

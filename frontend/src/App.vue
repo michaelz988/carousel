@@ -1,7 +1,9 @@
 <template>
   <div id="app">
     <SiteNav v-if="showNav"></SiteNav>
-    <router-view/>
+    <main :class="['app-main', { 'app-main--framed': showNav }]">
+      <router-view/>
+    </main>
   </div>
 </template>
 

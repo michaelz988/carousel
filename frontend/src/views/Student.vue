@@ -1,31 +1,36 @@
 <template>
-  <div id="dashboard">
-    <section>
-      <div class="col1">
-        <div class="profile">
-          <h5>{{ activeUser.email }}</h5>
-          <p>{{ activeUser.firstName }} {{ activeUser.lastName }}</p>
+  <div id="dashboard" class="page">
+    <div class="dash-grid">
+      <aside class="profile-card">
+        <div class="profile-card__avatar">{{ initials }}</div>
+        <div>
+          <p class="profile-card__name">{{ displayName }}</p>
+          <p class="profile-card__email">{{ activeUser.email }}</p>
+          <span class="role-badge role-badge--student">Student</span>
         </div>
-      </div>
+      </aside>
 
-      <div class="col2">
-        <div v-if="assignments.length">
-          <div v-for="assignment in assignments" :key="assignment.assignmentId" class="assignment">
-            <h5>{{ assignment.title }}</h5>
-            <span>{{ assignment.createdAt | formatDate }}</span>
-            <v-card class = "f">
-              <a @click="editLottery(assignment)"><div class = "ic">Lottery <img thumbnail fluid src="./../assets/lottery.png" height="40px" class = "rounded-circle bg-white" alt="Lottery"></div></a>
-              <a @click="listPoas(assignment)"><div class = "ic"> POAS <img thumbnail fluid src="./../assets/POAS.png" height="40px" class = "rounded-circle bg-white" alt="Student"></div></a>
-            </v-card>
+      <div class="dash-content">
+        <div v-if="assignments.length" class="assignment-list">
+          <div v-for="assignment in assignments" :key="assignment.assignmentId" class="assignment-card">
+            <h2 class="assignment-card__title">{{ assignment.title }}</h2>
+            <span class="assignment-card__date">{{ assignment.createdAt | formatDate }}</span>
+            <div class="assignment-card__actions">
+              <b-button variant="primary" @click="editLottery(assignment)">
+                <img src="./../assets/lottery.png" class="action-ic" alt="" aria-hidden="true"> Lottery
+              </b-button>
+              <b-button variant="outline-primary" @click="listPoas(assignment)">
+                <img src="./../assets/POAS.png" class="action-ic" alt="" aria-hidden="true"> POAS
+              </b-button>
+            </div>
           </div>
         </div>
 
-        <div v-else>
-          <p class="no-results">There is no assignment yet.</p>
+        <div v-else class="empty-state">
+          <p class="mb-0">There is no assignment yet.</p>
         </div>
-
       </div>
-    </section>
+    </div>
 
     <!-- full assignment modal -->
     <transition name="fade">
@@ -61,7 +66,20 @@ export default {
     }
   },
   computed: {
-    ...mapState(['activeUser', 'posts'])
+    ...mapState(['activeUser', 'posts']),
+    displayName() {
+      const u = this.activeUser
+      const full = [u.firstName, u.lastName].filter(Boolean).join(' ')
+      return full || u.username || (u.email ? u.email.split('@')[0] : 'Student')
+    },
+    initials() {
+      const u = this.activeUser
+      if (u.firstName || u.lastName) {
+        return `${(u.firstName || '')[0] || ''}${(u.lastName || '')[0] || ''}`.toUpperCase()
+      }
+      const base = u.username || u.email || '?'
+      return base.slice(0, 2).toUpperCase()
+    }
   },
   methods: {
     getAssignments() {

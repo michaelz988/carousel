@@ -1,31 +1,38 @@
 <template>
-  <div id="dashboard">
-    <section>
-      <div class="col1">
-        <div class="profile">
-          <h5>{{ activeUser.email }}</h5>
-          <p>{{ activeUser.username }}</p>
+  <div id="dashboard" class="page">
+    <div class="dash-grid">
+      <aside class="profile-card">
+        <div class="profile-card__avatar">{{ initials }}</div>
+        <div>
+          <p class="profile-card__name">{{ displayName }}</p>
+          <p class="profile-card__email">{{ activeUser.email }}</p>
+          <span class="role-badge role-badge--teacher">Teacher</span>
         </div>
-      </div>
-      <div class="col2">
-        <div v-if="assignments.length">
-          <div v-for="assignment in assignments" :key="assignment.id" class="assignment">
-            <h5>{{ assignment.title }}</h5>
-            <span>{{ assignment.createdAt | formatDate }}</span>
-            <!--<ul> -->
-            <v-card class = "f">
-              <a @click="editAssignment(assignment)"><div class = "ic"> Edit <div width = "70px" height = "70px" class = "rounded-circle bg-white"><img thumbnail fluid src="./../assets/edit.png" height="40px" alt="Edit"></div> </div></a>
-              <a @click="manageStudents(assignment)"><div class = "ic"> Students <img thumbnail fluid src="./../assets/student.png" height="40px" class = "rounded-circle bg-white" alt="Student"></div></a>
-              <a @click="adminLottery(assignment)"><div class = "ic">Lottery <img thumbnail fluid src="./../assets/lottery.png" height="40px" class = "rounded-circle bg-white" alt="Lottery"></div></a>
-            </v-card>
-            <!--</ul>-->
+      </aside>
+
+      <div class="dash-content">
+        <div v-if="assignments.length" class="assignment-list">
+          <div v-for="assignment in assignments" :key="assignment.id" class="assignment-card">
+            <h2 class="assignment-card__title">{{ assignment.title }}</h2>
+            <span class="assignment-card__date">{{ assignment.createdAt | formatDate }}</span>
+            <div class="assignment-card__actions">
+              <b-button variant="outline-secondary" @click="editAssignment(assignment)">
+                <img src="./../assets/edit.png" class="action-ic" alt="" aria-hidden="true"> Edit
+              </b-button>
+              <b-button variant="outline-primary" @click="manageStudents(assignment)">
+                <img src="./../assets/student.png" class="action-ic" alt="" aria-hidden="true"> Students
+              </b-button>
+              <b-button variant="primary" @click="adminLottery(assignment)">
+                <img src="./../assets/lottery.png" class="action-ic" alt="" aria-hidden="true"> Lottery
+              </b-button>
+            </div>
           </div>
         </div>
-        <div v-else>
-          <p class="no-results">There are currently no assignments</p>
+        <div v-else class="empty-state">
+          <p class="mb-0">There are currently no assignments.</p>
         </div>
       </div>
-    </section>
+    </div>
 
     <!-- full assignment modal -->
     <transition name="fade">
@@ -71,7 +78,20 @@ export default {
     }
   },
   computed: {
-    ...mapState(['activeUser', 'posts'])
+    ...mapState(['activeUser', 'posts']),
+    displayName() {
+      const u = this.activeUser
+      const full = [u.firstName, u.lastName].filter(Boolean).join(' ')
+      return full || u.username || (u.email ? u.email.split('@')[0] : 'Teacher')
+    },
+    initials() {
+      const u = this.activeUser
+      if (u.firstName || u.lastName) {
+        return `${(u.firstName || '')[0] || ''}${(u.lastName || '')[0] || ''}`.toUpperCase()
+      }
+      const base = u.username || u.email || '?'
+      return base.slice(0, 2).toUpperCase()
+    }
   },
   methods: {
     getAssignments() {

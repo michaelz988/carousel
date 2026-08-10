@@ -1,6 +1,11 @@
-// Then import Bootstrap an BootstrapVue SCSS files (order is important)
+// 1. Design tokens — MUST come first so the Bootstrap variable overrides
+//    inside it win over Bootstrap's own `!default` values.
+@import 'tokens';
+
+// 2. Bootstrap + BootstrapVue (now themed by the tokens above)
 @import 'node_modules/bootstrap/scss/bootstrap.scss';
 @import 'node_modules/bootstrap-vue/src/index.scss';
 
+// 3. App styles
 @import 'global';
 @import 'layout';

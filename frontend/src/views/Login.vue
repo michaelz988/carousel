@@ -3,24 +3,27 @@
     <PasswordReset v-if="showPasswordReset" @close="togglePasswordReset()"></PasswordReset>
     <section>
       <div class="col1">
-        <h1>Carousel</h1>
-        <p>Welcome to the web-based lottery system for school assignments.</p>
-        <br>
+        <div class="login-brand">
+          <img src="../assets/logo.png" class="login-brand__logo" alt="Carousel logo" />
+          <h1 class="login-brand__title">Carousel</h1>
+        </div>
+        <p class="login-brand__lead">Welcome to the web-based lottery system for school assignments.</p>
         <p>This application facilitates assigning class project topics by conducting a fair lottery.</p>
-        <br>
-        <p>Made in open source by <a href="https://code4real.org/" target="_blank">Code4Real</a>.</p>
+        <p class="login-brand__credit">Made in open source by <a href="https://code4real.org/" target="_blank">Code4Real</a>.</p>
       </div>
 
       <div :class="{ 'signup-form': !showLoginForm }" class="col2">
-        <h1>Welcome</h1>
-          <p>Please sign in with your Google account.</p>
-          <br>
-          <p>For teachers: please use your Google account added to the system by the administrator.</p>
-          <br>
-          <p>For students: please use your school Google account.</p>
-          <br>
-          <div id="g_id_signin"></div>
-          <br>
+        <div class="login-card">
+          <h2 class="login-card__title">Welcome</h2>
+          <p class="login-card__subtitle">Please sign in with your Google account.</p>
+
+          <ul class="login-hints">
+            <li><strong>Teachers:</strong> use the Google account added to the system by your administrator.</li>
+            <li><strong>Students:</strong> use your school Google account.</li>
+          </ul>
+
+          <div id="g_id_signin" class="login-google"></div>
+        </div>
       </div>
     </section>
   </div>

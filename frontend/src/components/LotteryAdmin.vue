@@ -1,8 +1,5 @@
 <template>
-  <div class="p-modal">
-    <div class="p-container">
-      <a id="closebutton" @click="$emit('close')">close</a>
-
+  <app-modal title="Lottery Administration" size="xl" @close="$emit('close')">
     <div>
       <step-progress :steps="lotterySteps" :current-step="activeAssignment.state" icon-class="fa fa-check"
         active-color="green" passive-color="grey"
@@ -43,7 +40,7 @@
           <h5>Lottery result</h5>
           </b-col>
           <b-col md="2">
-          <button v-on:click = "copyToClipboard('select_txt')">Click To Copy</button>
+          <b-button variant="outline-primary" size="sm" v-on:click="copyToClipboard('select_txt')">Click To Copy</b-button>
           </b-col>
           <b-col md="4">
           <b-input-group size="sm">
@@ -125,8 +122,7 @@
         <p>Please click on a Student...</p>
       </div>
     </div>
-  </div>
-  </div>
+  </app-modal>
 </template>
 
 <script>
@@ -134,6 +130,7 @@ import { mapState } from 'vuex'
 import AssignmentDataService from "../services/AssignmentDataService"
 import TeacherDataService from "../services/TeacherDataService"
 import LotteryModal from '../components/LotteryModal.vue'
+import AppModal from "./AppModal"
 
 import StepProgress from 'vue-step-progress';
 // import the css (OPTIONAL - you can provide your own design)
@@ -143,7 +140,8 @@ export default {
   name: "lottery-admin",
   components: {
     'lottery-modal': LotteryModal,
-    'step-progress': StepProgress
+    'step-progress': StepProgress,
+    AppModal
   },
   data() {
     return {
@@ -293,26 +291,10 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 .list {
   text-align: left;
   max-width: 750px;
   margin: auto;
-}
-
-.mb-2 {
-  max-width: 500px;
-}
-
-.mr-2 {
-  max-width: 1000px;
-  max-height: 500px;
-}
-
-#closebutton{
-  font-size: 1.5em;
-  display: block;
-  vertical-align: right;
-  text-align: right;
 }
 </style>
