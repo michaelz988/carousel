@@ -1,0 +1,87 @@
+@import 'tailwindcss';
+
+/* ------------------------------------------------------------------
+   Design tokens (Tailwind v4 CSS-first config)
+
+   Everything below generates real utilities — `--color-brand-600`
+   becomes `bg-brand-600`, `text-brand-600`, `border-brand-600`, etc.
+   This is the single source of truth for the visual system, the same
+   role `_tokens.scss` played in the Vue 2 app.
+   ------------------------------------------------------------------ */
+@theme {
+  /* Brand — teal/green, carried over and given a full ramp */
+  --color-brand-50: #f0f7f5;
+  --color-brand-100: #dbebe6;
+  --color-brand-200: #b9d8ce;
+  --color-brand-300: #8dbdae;
+  --color-brand-400: #5d9c89;
+  --color-brand-500: #3d8270;
+  --color-brand-600: #2f6f5e;
+  --color-brand-700: #245647;
+  --color-brand-800: #1e453a;
+  --color-brand-900: #193930;
+
+  /* Ink — warm-tinted neutrals, softer than pure gray */
+  --color-ink-50: #f7f8f8;
+  --color-ink-100: #eef0ef;
+  --color-ink-200: #dde2e0;
+  --color-ink-300: #c8cecc;
+  --color-ink-400: #98a3a0;
+  --color-ink-500: #6b7976;
+  --color-ink-600: #4f5c59;
+  --color-ink-700: #3b4644;
+  --color-ink-800: #2a3331;
+  --color-ink-900: #1f2a28;
+
+  /* Accents for role badges & status */
+  --color-accent-gold: #b3801f;
+  --color-accent-gold-soft: #f6ecd9;
+  --color-accent-blue: #2a6198;
+  --color-accent-blue-soft: #e4eef7;
+
+  /* Typography — editorial serif display over a clean sans body */
+  --font-display: 'Fraunces', ui-serif, Georgia, serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
+    sans-serif;
+
+  /* Elevation — restrained, no heavy drop shadows */
+  --shadow-card: 0 1px 2px rgb(31 42 40 / 0.05), 0 1px 3px rgb(31 42 40 / 0.06);
+  --shadow-raised: 0 4px 14px rgb(31 42 40 / 0.08);
+  --shadow-overlay: 0 16px 48px rgb(31 42 40 / 0.18);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-ink-50 text-ink-900 font-sans antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display tracking-tight;
+  }
+
+  /* Visible focus for keyboard users only — never remove outlines outright */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-500/60;
+  }
+}
+
+@layer components {
+  /* Shared surfaces used across the app */
+  .card {
+    @apply bg-white border border-ink-200 rounded-xl shadow-card;
+  }
+
+  .page {
+    @apply mx-auto w-full max-w-6xl px-5 py-8 sm:px-6 lg:py-10;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-[0.68rem] font-bold uppercase tracking-wide;
+  }
+}
