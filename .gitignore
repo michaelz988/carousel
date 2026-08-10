@@ -1,0 +1,13 @@
+node_modules
+
+# SST build artifacts, Pulumi state and lambda bundles (~650 MB, machine-local)
+.sst/
+
+# Build output
+dist/
+
+# Environment files — never commit these
+.env
+
+# OS files
+.DS_Store
