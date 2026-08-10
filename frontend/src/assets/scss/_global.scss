@@ -1,19 +1,38 @@
-// imports
-@import url('https://fonts.googleapis.com/css?family=Open+Sans');
-// colors
-$primary: #30A0EE;
-$error: #ef5777;
-$success: #1abc9c;
-$light: #F5F8FA;
-$medium: #657786;
-$dark: #34495E;
-$white: #fff;
+// Colors, fonts, spacing and radii now live in `_tokens.scss`, which is
+// imported before Bootstrap so the whole UI (including BootstrapVue) shares
+// one palette.
+
+// Expose the palette as CSS custom properties so component-scoped <style>
+// blocks can theme against the same tokens (var(--c-brand), …) without
+// re-importing the Sass file (and its web-font @import) per component.
+:root {
+	--c-brand:        #{$brand};
+	--c-brand-dark:   #{$brand-dark};
+	--c-brand-tint:   #{$brand-tint};
+	--c-accent:       #{$accent};
+	--c-success:      #{$success};
+	--c-danger:       #{$danger};
+	--c-warning:      #{$warning};
+	--c-info:         #{$info};
+	--c-bg:           #{$bg};
+	--c-surface:      #{$surface};
+	--c-border:       #{$border};
+	--c-text-strong:  #{$text-strong};
+	--c-text-medium:  #{$text-medium};
+	--c-light:        #{$light};
+	--radius-sm:      #{$radius-sm};
+	--radius:         #{$radius};
+	--radius-lg:      #{$radius-lg};
+	--shadow-sm:      #{$shadow-sm};
+	--shadow-md:      #{$shadow-md};
+	--shadow-lg:      #{$shadow-lg};
+}
 
 // resets
 body {
 	margin: 0;
-	color: $dark;
-	background: #E6ECF0;
+	color: $text-strong;
+	background: $bg;
 }
 
 html {
@@ -24,11 +43,14 @@ html {
 * {
 	font-family: 'Open Sans', sans-serif;
 	box-sizing: border-box;
-	transition: 0.15s;
+}
 
-	&:focus {
-		outline: none;
-	}
+// Accessible focus ring — replaces the old blanket `*:focus { outline: none }`
+// which stripped keyboard focus from every element. Only shows for keyboard
+// users, so mouse clicks stay visually clean.
+:focus-visible {
+	outline: 2px solid rgba($brand, 0.6);
+	outline-offset: 2px;
 }
 
 // fonts
@@ -129,26 +151,37 @@ section {
 	}
 }
 
+// Shared button — visually matched to BootstrapVue's `.btn-primary` so the
+// two systems read as one. Behaviour of every button is unchanged.
 .button {
-	background: $primary;
+	display: inline-block;
+	background: $brand;
 	border: 0;
-	outline: 0;
 	color: $white;
-	padding: 0.8rem 1rem;
+	padding: 0.65rem 1.25rem;
 	min-width: 150px;
-	font-size: 16px;
-	border-radius: 3px;
+	font-size: 15px;
+	font-weight: 600;
+	line-height: 1.4;
+	border-radius: $radius;
+	box-shadow: $shadow-sm;
 	cursor: pointer;
+	transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
 
 	&:hover {
-		background: lighten($primary, 5%);
+		background: $brand-dark;
+	}
+
+	&:active {
+		transform: translateY(1px);
 	}
 
 	&:disabled {
 		opacity: 0.5;
+		cursor: not-allowed;
 
 		&:hover {
-			background: $primary;
+			background: $brand;
 		}
 	}
 }
@@ -183,24 +216,33 @@ form {
 		width: 100%;
 		margin-bottom: 1rem;
 		font-size: 16px;
-		padding: 10px;
+		padding: 10px 12px;
 		outline: 0;
-		border: 1px solid #e6ecf0;
-		border-radius: 3px;
+		border: 1px solid $border;
+		border-radius: $radius-sm;
+		transition: border-color 0.15s ease, box-shadow 0.15s ease;
 
 		&:focus {
-			box-shadow: 0 0 5px 0 rgba($dark, 0.2);
+			border-color: $brand;
+			box-shadow: 0 0 0 3px rgba($brand, 0.15);
 		}
 	}
 
 	textarea {
-		resize: none;
-		border: 1px solid #e6ecf0;
+		resize: vertical;
+		border: 1px solid $border;
+		border-radius: $radius-sm;
 		outline: 0;
 		height: 100px;
 		width: 100%;
-		padding: 10px;
+		padding: 10px 12px;
 		font-size: 16px;
+		transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+		&:focus {
+			border-color: $brand;
+			box-shadow: 0 0 0 3px rgba($brand, 0.15);
+		}
 	}
 }
 // transitions

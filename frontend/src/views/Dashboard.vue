@@ -1,30 +1,27 @@
 <template>
-  <div>
-    <router-link to="/teacher">
-      <div class="teacher">
-        <h3>Teacher</h3>
-        <div class="teacher_picture">
-          <img
-            src="https://i.pinimg.com/564x/9e/6f/f7/9e6ff7da87f11056c7cff3e2f525b9b9.jpg"
-          />
-        </div>
+  <div class="landing">
+    <div class="landing__card">
+      <img src="../assets/logo.png" class="landing__logo" alt="Carousel logo" />
+      <h1 class="landing__title">Carousel</h1>
+      <p class="landing__subtitle">Web-based lottery system for school assignments</p>
+
+      <div class="landing__status">
+        <b-spinner small class="landing__spinner" label="Loading"></b-spinner>
+        <span>Taking you to your dashboard…</span>
       </div>
-    </router-link>
-    <router-link to="/student">
-      <div class="student">
-        <h3>Student</h3>
-        <div class="student_picture">
-          <img
-            src="https://i.pinimg.com/originals/9b/33/42/9b3342ee4de416e533a5de91d388feb3.jpg"
-          />
-        </div>
+
+      <!-- Fallback: shown only if automatic role redirect did not occur -->
+      <div class="landing__fallback">
+        <b-button v-if="homeLink" :to="homeLink" variant="primary" class="landing__btn">
+          Continue to my dashboard
+        </b-button>
+        <b-button v-else to="/login" variant="outline-primary" class="landing__btn">
+          Return to sign in
+        </b-button>
       </div>
-    </router-link>
+    </div>
   </div>
 </template>
-
-
-<script src="https://apis.google.com/js/platform.js" async defer></script>
 
 <script>
 import { mapState } from "vuex";
@@ -32,10 +29,7 @@ import Firebase from "../firebase.js";
 import router from '../router';
 
 export default {
-  name: "HelloWorld",
-  props: {
-    msg: String,
-  },
+  name: "Dashboard",
   data() {
     return {
       user: {
@@ -53,6 +47,15 @@ export default {
         return this.user.data.displayName.split(" ")[0];
       }
       return null;
+    },
+    homeLink() {
+      const role = this.activeUser && this.activeUser.roles && this.activeUser.roles[0];
+      switch (role) {
+        case "ROLE_STUDENT": return "/student";
+        case "ROLE_TEACHER": return "/teacher";
+        case "ROLE_ADMIN": return "/admin";
+        default: return null;
+      }
     },
     ...mapState(["activeUser"]),
   },
@@ -94,89 +97,59 @@ export default {
 };
 </script>
 
-<style>
-.google-signin-button {
-  color: white;
-  background-color: red;
-  height: 50px;
-  font-size: 16px;
-  border-radius: 10px;
-  padding: 10px 20px 25px 20px;
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+<style scoped>
+.landing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 65px);
+  padding: 2rem 1rem;
 }
 
-.teacher {
-  width: 47%;
-  height: 700px;
-  background-color: #ccccccff;
+.landing__card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 2.5rem 2rem;
   text-align: center;
-  float: left;
-  margin-left: 1%;
-  margin-top: 2%;
-  border: 1px solid black;
 }
 
-.student {
-  width: 47%;
-  height: 700px;
-  background-color: #ccccccff;
-  text-align: center;
-  float: right;
-  margin-right: 1%;
-  margin-top: 2%;
-  border: 1px solid black;
-}
-
-.teacher_picture {
-  position: relative;
-  width: 400px;
-  height: 400px;
-  border-radius: 50%;
-  background-color: #eeeeeeff;
-  margin: auto;
-  margin-top: 25%;
-  overflow: hidden;
-  border: 1px solid black;
-}
-
-.teacher_picture img {
+.landing__logo {
+  height: 56px;
   width: auto;
-  height: 100%;
-  margin-left: -85px;
-  -webkit-transition: all 1s ease;
-  -moz-transition: all 1s ease;
-  -o-transition: all 1s ease;
-  -ms-transition: all 1s ease;
-  transition: all 1s ease;
+  margin-bottom: 0.75rem;
 }
 
-.teacher_picture img:hover {
-  -webkit-filter: brightness(70%);
-  filter: brightness(70%);
-}
-.student_picture {
-  width: 400px;
-  height: 400px;
-  border-radius: 50%;
-  background-color: #eeeeeeff;
-  margin: auto;
-  margin-top: 25%;
-  border: 1px solid black;
+.landing__title {
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--c-brand);
+  margin: 0 0 0.35rem;
 }
 
-.student_picture img {
-  width: auto;
-  height: 100%;
-  border-radius: 50%;
-  -webkit-transition: all 1s ease;
-  -moz-transition: all 1s ease;
-  -o-transition: all 1s ease;
-  -ms-transition: all 1s ease;
-  transition: all 1s ease;
+.landing__subtitle {
+  color: var(--c-text-medium);
+  margin: 0 0 1.75rem;
 }
 
-.student_picture img:hover {
-  -webkit-filter: brightness(70%);
-  filter: brightness(70%);
+.landing__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--c-text-medium);
+  font-size: 0.95rem;
+  margin-bottom: 1.75rem;
+}
+
+.landing__spinner {
+  color: var(--c-brand);
+}
+
+.landing__btn {
+  min-width: 220px;
+  font-weight: 600;
 }
 </style>

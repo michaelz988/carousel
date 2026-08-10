@@ -1,19 +1,27 @@
 <template>
-  <div id="dashboard">
-    <section>
-      <div class="col1">
-        <div class="profile">
-          <h5>{{ activeUser.email }}</h5>
-          <p>{{ activeUser.username }}</p>
+  <div id="dashboard" class="page">
+    <div class="dash-grid">
+      <aside class="profile-card">
+        <div class="profile-card__avatar">{{ initials }}</div>
+        <div>
+          <p class="profile-card__name">{{ displayName }}</p>
+          <p class="profile-card__email">{{ activeUser.email }}</p>
+          <span class="role-badge role-badge--admin">Admin</span>
+        </div>
+      </aside>
+
+      <div class="dash-content">
+        <div class="assignment-card">
+          <h2 class="assignment-card__title">American High School</h2>
+          <span class="assignment-card__date">School administration</span>
+          <div class="assignment-card__actions">
+            <b-button variant="primary" @click="manageTeachers()">
+              <img src="./../assets/student.png" class="action-ic" alt="" aria-hidden="true"> Manage Teachers
+            </b-button>
+          </div>
         </div>
       </div>
-      <div class="col2">
-        <h5>American High School</h5>
-        <ul>
-            <li><a @click="manageTeachers()">Teachers</a></li>
-        </ul> 
-      </div>
-    </section>
+    </div>
 
     <!-- teachers list modal -->
     <transition name="fade">
@@ -43,7 +51,20 @@ export default {
     }
   },
   computed: {
-    ...mapState(['activeUser', 'posts'])
+    ...mapState(['activeUser', 'posts']),
+    displayName() {
+      const u = this.activeUser
+      const full = [u.firstName, u.lastName].filter(Boolean).join(' ')
+      return full || u.username || (u.email ? u.email.split('@')[0] : 'Admin')
+    },
+    initials() {
+      const u = this.activeUser
+      if (u.firstName || u.lastName) {
+        return `${(u.firstName || '')[0] || ''}${(u.lastName || '')[0] || ''}`.toUpperCase()
+      }
+      const base = u.username || u.email || '?'
+      return base.slice(0, 2).toUpperCase()
+    }
   },
   methods: {
     getAssignments() {

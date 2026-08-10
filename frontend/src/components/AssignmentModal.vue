@@ -1,27 +1,31 @@
 <template>
-  <div class="p-modal">
-    <div class="p-container">
-      <a id="closebutton" @click="$emit('close')">close</a>
-      <h3>{{ assignment.title }}</h3>
-      <span>{{ assignment.createdAt | formatDate }}</span>
-       <br><br>
-       <h5>Description</h5>
-        <br>
-        <textarea type="text" id="description" v-model.trim="assignment.description" required rows="5" cols="80"></textarea>
-        <br><br><br>
-       <h5>Configurations</h5>
-       <label>Minimum number of lottery entries each student must submit: 
-       <vue-numeric-input  v-model="assignment.minEntries" :min="1" :max="3" :step="1"></vue-numeric-input>
-       </label>
-       <br>
-       <label>Maximum number of lottery entries each student can enter: 
-       <vue-numeric-input  v-model="assignment.maxEntries" :min="3" :max="5" :step="1"></vue-numeric-input>
-       </label>
-       <br>
-       <br>
-      <button @click = "updateAssignment">Update</button>
+  <app-modal size="md" @close="$emit('close')">
+    <template #title>{{ assignment.title }}</template>
+
+    <p class="modal-meta">{{ assignment.createdAt | formatDate }}</p>
+
+    <div class="modal-section">
+      <h3 class="modal-section__title">Description</h3>
+      <textarea id="description" v-model.trim="assignment.description" required rows="5"></textarea>
     </div>
-  </div>
+
+    <div class="modal-section">
+      <h3 class="modal-section__title">Configurations</h3>
+      <label class="modal-field">
+        <span>Minimum number of lottery entries each student must submit:</span>
+        <vue-numeric-input v-model="assignment.minEntries" :min="1" :max="3" :step="1"></vue-numeric-input>
+      </label>
+      <label class="modal-field">
+        <span>Maximum number of lottery entries each student can enter:</span>
+        <vue-numeric-input v-model="assignment.maxEntries" :min="3" :max="5" :step="1"></vue-numeric-input>
+      </label>
+    </div>
+
+    <template #footer>
+      <b-button variant="secondary" @click="$emit('close')">Cancel</b-button>
+      <b-button variant="primary" @click="updateAssignment">Update</b-button>
+    </template>
+  </app-modal>
 </template>
 
 <script>
@@ -29,10 +33,12 @@ import VueNumericInput from 'vue-numeric-input';
 import { mapState } from 'vuex'
 import moment from 'moment'
 import AssignmentDataService from "../services/AssignmentDataService";
+import AppModal from "./AppModal";
 
 export default {
   components: {
-    VueNumericInput
+    VueNumericInput,
+    AppModal
   },
   data() {
     return {

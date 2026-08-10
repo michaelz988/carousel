@@ -1,10 +1,7 @@
 <template>
-  <div class="p-modal">
-    <div class="p-container">
-      <a id="closebutton" @click="$emit('close')">close</a>
+  <app-modal title="Students List" size="xl" @close="$emit('close')">
     <div class="row">
     <div class="col-lg-8">
-      <h4>Students List</h4>
       <div>
         <b-table striped hover sticky-header="600px" :items="students" :fields="fields"
           :select-mode="selectMode"
@@ -58,9 +55,7 @@
       <students-import v-if="showStudentsImport" :activeAssignment="this.activeAssignment" @close="closeStudentsImport()">
       </students-import>
     </transition>
-
-  </div>
-  </div>
+  </app-modal>
 </template>
 
 <script>
@@ -70,11 +65,13 @@ import StudentsImport from '../components/StudentsImport'
 import AssignmentDataService from "../services/AssignmentDataService"
 import TeacherDataService from "../services/TeacherDataService"
 import LotteryModal from '../components/LotteryModal.vue'
+import AppModal from "./AppModal"
 
 export default {
   name: "students-list",
   components: {
-    StudentsImport
+    StudentsImport,
+    AppModal
   },
   data() {
     return {

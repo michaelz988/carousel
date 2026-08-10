@@ -1,64 +1,53 @@
-# Vue.js CRUD App with Vue Router & Axios
+# Carousel — Frontend
 
-For instruction, please visit:
-> [Vue.js CRUD App with Vue Router & Axios](https://bezkoder.com/vue-js-crud-app/)
-
-More Practice:
-> [Vue Pagination with Axios and API example](https://bezkoder.com/vue-pagination-axios/)
-
-> [Vue.js JWT Authentication with Vuex and Vue Router](https://bezkoder.com/jwt-vue-vuex-authentication/)
-
-> [Vue File Upload example using Axios](https://bezkoder.com/vue-axios-file-upload/)
-
-Fullstack with Node.js Express:
-> [Vue.js + Node.js Express + MySQL](https://bezkoder.com/vue-js-node-js-express-mysql-crud-example/)
-
-> [Vue.js + Node.js Express + PostgreSQL](https://bezkoder.com/vue-node-express-postgresql/)
-
-> [Vue.js + Node.js Express + MongoDB](https://bezkoder.com/vue-node-express-mongodb-mevn-crud/)
-
-Fullstack with Spring Boot:
-> [Vue.js + Spring Boot](https://bezkoder.com/spring-boot-vue-js-crud-example/)
-
-> [Vue.js + Spring Boot + MongoDB](https://bezkoder.com/spring-boot-vue-mongodb/)
-
-Fullstack with Django:
-> [Vue.js + Django](https://bezkoder.com/django-vue-js-rest-framework/)
-
-Integration (run back-end & front-end on same server/port)
-> [Integrate Vue.js with Spring Boot](https://bezkoder.com/integrate-vue-spring-boot/)
-
-> [Integrate Vue App with Node.js Express](https://bezkoder.com/serve-vue-app-express/)
-
-Serverless with Firebase:
-> [Vue Firebase Realtime Database: CRUD example](https://bezkoder.com/vue-firebase-realtime-database/)
-
-> [Vue Firestore CRUD example](https://bezkoder.com/vue-firestore-crud/)
+Vue 2 single-page app (vue-cli) with BootstrapVue, Vuex, and Vue Router. It is the
+client for the Carousel assignment-lottery system. See the [root README](../README.md)
+for the full product overview.
 
 ## Project setup
-```
+
+```bash
 npm install
 ```
 
 ### Compiles and hot-reloads for development
-```
+
+```bash
 npm run serve
 ```
 
 ### Compiles and minifies for production
-```
+
+```bash
 npm run build
 ```
 
-### Run your tests
-```
-npm run test
-```
-
 ### Lints and fixes files
-```
+
+```bash
 npm run lint
 ```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+> On Node 17+ the build/serve commands need `NODE_OPTIONS=--openssl-legacy-provider`
+> (vue-cli 4 / webpack 4 use the legacy OpenSSL hashing). This repo pins Node 16 via
+> `.node-version`.
+
+## Structure
+
+- `src/views/` — routed pages (Login, Dashboard, Student, Teacher, Admin, Settings).
+- `src/components/` — shared UI: `SiteNav`, `AppModal` (the accessible modal wrapper),
+  and the assignment / lottery / roster modals.
+- `src/assets/scss/` — the design system: `_tokens.scss` (single source of truth for
+  colors, spacing, radii — also overrides Bootstrap's Sass variables), `_global.scss`,
+  and `_layout.scss`.
+- `src/services/` — Axios data services for the backend API.
+- `src/store/` — Vuex store (auth/session, active assignment).
+
+## Theming
+
+All colors, radii, shadows, and the type family live in `src/assets/scss/_tokens.scss`.
+Because those tokens override Bootstrap's own Sass `!default` variables *before*
+Bootstrap is imported in `app.scss`, every BootstrapVue component (`b-button`,
+`b-table`, `b-modal`, …) inherits the brand automatically. Component-scoped styles read
+the same palette through CSS custom properties (`var(--c-brand)`, …) exposed in
+`_global.scss`.
