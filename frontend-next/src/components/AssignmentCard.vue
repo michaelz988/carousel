@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { formatRelative, formatDate } from '@/lib/date'
-import { lotteryState } from '@/lib/user'
+import { lotteryState } from '@/lib/lottery'
 
 const props = defineProps({
   assignment: { type: Object, required: true },
@@ -46,8 +46,11 @@ const entryRange = computed(() => {
       v-if="due || entryRange"
       class="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-xs text-ink-500"
     >
+      <!-- Labelled as the teacher's deadline, not an enforced one: nothing in
+           the backend reads dueDate, so only the lock state actually closes
+           entries. -->
       <div v-if="due" class="flex gap-1.5">
-        <dt class="font-semibold text-ink-600">Due</dt>
+        <dt class="font-semibold text-ink-600">Teacher's deadline</dt>
         <dd>{{ due }}</dd>
       </div>
       <div v-if="entryRange" class="flex gap-1.5">
@@ -55,6 +58,8 @@ const entryRange = computed(() => {
         <dd>{{ entryRange }}</dd>
       </div>
     </dl>
+
+    <slot name="status" />
 
     <div class="mt-5 flex flex-wrap gap-2 border-t border-ink-100 pt-4">
       <slot name="actions" />

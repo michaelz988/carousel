@@ -12,6 +12,7 @@ const currentFile = ref(null)
 const classPeriod = ref(1)
 const progress = ref(0)
 const message = ref('')
+const failed = ref(false)
 
 function selectFile() {
   selectedFiles.value = fileInput.value?.files ?? null
@@ -35,10 +36,12 @@ function upload() {
   )
     .then((response) => {
       message.value = response.data.message
+      failed.value = false
     })
     .catch(() => {
       progress.value = 0
-      message.value = 'Could not upload the file!'
+      message.value = 'Could not upload the file.'
+      failed.value = true
       currentFile.value = null
     })
 
@@ -88,8 +91,22 @@ function upload() {
 
     <AppButton :disabled="!selectedFiles" @click="upload">Upload</AppButton>
 
-    <p v-if="message" class="rounded-lg bg-ink-50 px-3 py-2 text-sm text-ink-600">
+    <p
+      v-if="message"
+      class="rounded-lg border px-3 py-2 text-sm"
+      :class="
+        failed
+          ? 'border-red-200 bg-red-50 text-red-800'
+          : 'border-brand-200 bg-brand-50 text-brand-800'
+      "
+      role="status"
+    >
       {{ message }}
+    </p>
+
+    <p class="text-xs leading-relaxed text-ink-400">
+      Close this dialog when you're done — the roster will refresh and show how
+      many students were added.
     </p>
   </div>
 </template>

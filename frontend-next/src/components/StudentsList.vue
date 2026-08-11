@@ -7,6 +7,7 @@ import AppModal from '@/components/AppModal.vue'
 import AppButton from '@/components/AppButton.vue'
 import DataTable from '@/components/DataTable.vue'
 import StudentsImport from '@/components/StudentsImport.vue'
+import { notify } from '@/lib/notify'
 
 const emit = defineEmits(['close'])
 const auth = useAuthStore()
@@ -31,7 +32,7 @@ const showImport = ref(false)
 
 function retrieveStudents(assignmentId) {
   busy.value = true
-  StudentDataService.getAll(assignmentId)
+  return StudentDataService.getAll(assignmentId)
     .then((response) => {
       students.value = response.data
     })
@@ -63,9 +64,27 @@ function removeAllStudents() {
     .catch((e) => console.log(e))
 }
 
-function closeImport() {
-  refreshList()
+// The upload endpoint only returns a message string — it reports no row counts,
+// duplicates or failures. Rather than invent a breakdown, report the one thing
+// that is genuinely knowable: how much the roster actually grew.
+async function closeImport() {
+  const before = students.value.length
   showImport.value = false
+  await retrieveStudents(auth.activeAssignment.assignmentId)
+  currentStudent.value = null
+
+  const added = students.value.length - before
+  if (added > 0) {
+    notify(
+      `${added} ${added === 1 ? 'student' : 'students'} added to the roster.`,
+      'info',
+    )
+  } else {
+    notify(
+      'No new students were added. They may already be on the roster, or the file may not have matched the expected format.',
+      'info',
+    )
+  }
 }
 
 onMounted(() => retrieveStudents(auth.activeAssignment.assignmentId))

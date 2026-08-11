@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { TicketIcon, ListBulletIcon } from '@heroicons/vue/24/outline'
 import AssignmentDataService from '@/services/AssignmentDataService'
+import LotteryDataService from '@/services/LotteryDataService'
 import { useAuthStore } from '@/stores/auth'
 import AssignmentCard from '@/components/AssignmentCard.vue'
 import ProfileCard from '@/components/ProfileCard.vue'
@@ -9,6 +10,8 @@ import EmptyState from '@/components/EmptyState.vue'
 import AppButton from '@/components/AppButton.vue'
 import LotteryModal from '@/components/LotteryModal.vue'
 import PoasList from '@/components/PoasList.vue'
+import StudentLotteryPanel from '@/components/StudentLotteryPanel.vue'
+import { studentGuidance } from '@/lib/lottery'
 
 const auth = useAuthStore()
 
@@ -17,16 +20,37 @@ const loading = ref(true)
 const showLottery = ref(false)
 const showPoas = ref(false)
 
+// Per-assignment lottery status, keyed by assignmentId, so the card can show
+// submission progress and the final result without opening the entry form.
+const lotteryByAssignment = ref({})
+
+function loadLotteryStatus(assignment) {
+  const id = assignment.assignmentId
+  return LotteryDataService.getAll(id)
+    .then((response) => {
+      lotteryByAssignment.value = {
+        ...lotteryByAssignment.value,
+        [id]: response.data,
+      }
+    })
+    .catch((e) => console.log(e))
+}
+
 function getAssignments() {
   loading.value = true
   AssignmentDataService.getAll()
     .then((response) => {
       assignments.value = response.data
+      return Promise.all(response.data.map(loadLotteryStatus))
     })
     .catch((e) => console.log(e))
     .finally(() => {
       loading.value = false
     })
+}
+
+function canEdit(assignment) {
+  return studentGuidance(assignment.state).canEdit
 }
 
 function editLottery(assignment) {
@@ -37,6 +61,14 @@ function editLottery(assignment) {
 function listPoas(assignment) {
   auth.updateActiveAssignment(assignment)
   showPoas.value = true
+}
+
+// Refresh status after the entry form closes so saved changes show immediately.
+function closeLottery() {
+  showLottery.value = false
+  if (auth.activeAssignment?.assignmentId) {
+    loadLotteryStatus(auth.activeAssignment)
+  }
 }
 
 onMounted(getAssignments)
@@ -65,10 +97,17 @@ onMounted(getAssignments)
             :key="assignment.assignmentId"
             :assignment="assignment"
           >
+            <template #status>
+              <StudentLotteryPanel
+                :assignment="assignment"
+                :lottery="lotteryByAssignment[assignment.assignmentId] ?? null"
+              />
+            </template>
+
             <template #actions>
               <AppButton variant="primary" @click="editLottery(assignment)">
                 <TicketIcon class="h-4 w-4" aria-hidden="true" />
-                My lottery entries
+                {{ canEdit(assignment) ? 'Edit my choices' : 'View my choices' }}
               </AppButton>
               <AppButton variant="secondary" @click="listPoas(assignment)">
                 <ListBulletIcon class="h-4 w-4" aria-hidden="true" />
@@ -86,7 +125,7 @@ onMounted(getAssignments)
       </div>
     </div>
 
-    <LotteryModal v-if="showLottery" @close="showLottery = false" />
+    <LotteryModal v-if="showLottery" @close="closeLottery" />
     <PoasList v-if="showPoas" @close="showPoas = false" />
   </div>
 </template>
