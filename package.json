@@ -1,0 +1,8 @@
+{
+  "name": "carousel",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "frontend"
+  ]
+}

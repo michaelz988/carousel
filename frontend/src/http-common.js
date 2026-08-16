@@ -6,7 +6,7 @@ import VueSimpleAlert from "vue-simple-alert";
 const token = store.state.activeUser.accessToken;
 
 const http = axios.create({
-  baseURL: "http://localhost:8080/api",
+  baseURL: process.env.VUE_APP_API_URL || "http://localhost:8080/api",
   headers: {
     "Content-type": "application/json",
     "Accept": "application/json",

@@ -1,0 +1,11 @@
+{
+  "name": "@carousel/core",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/models/index.js",
+  "dependencies": {
+    "sequelize": "^5.21.2",
+    "mysql2": "^2.0.2",
+    "jsonwebtoken": "^8.5.1"
+  }
+}
