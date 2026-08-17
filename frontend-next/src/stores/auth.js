@@ -14,6 +14,9 @@ import router from '@/router'
  * here rather than carried forward as dead code.
  */
 export const useAuthStore = defineStore('auth', {
+  // The session survives a reload; see stores/persist.js
+  persist: true,
+
   state: () => ({
     activeUser: {},
     activeAssignment: {},
@@ -25,16 +28,7 @@ export const useAuthStore = defineStore('auth', {
     role: (s) => (s.activeUser.roles && s.activeUser.roles[0]) || '',
     accessToken: (s) => s.activeUser.accessToken,
     homeRoute() {
-      switch (this.role) {
-        case 'ROLE_STUDENT':
-          return '/student'
-        case 'ROLE_TEACHER':
-          return '/teacher'
-        case 'ROLE_ADMIN':
-          return '/admin'
-        default:
-          return '/'
-      }
+      return this.role === 'ROLE_ADMIN' ? '/admin' : '/'
     },
   },
 
@@ -54,22 +48,18 @@ export const useAuthStore = defineStore('auth', {
           email: gmail,
           credential: token,
         })
-        this.activeUser = response.data
 
-        switch (this.activeUser.roles[0]) {
-          case 'ROLE_STUDENT':
-            router.push('/student')
-            break
-          case 'ROLE_TEACHER':
-            router.push('/teacher')
-            break
-          case 'ROLE_ADMIN':
-            router.push('/admin')
-            break
-          default:
-            router.push('/')
-            break
+        // The backend does not store avatars, but the Google credential
+        // carries `picture` (and `name`). Keep them client-side so the top bar
+        // can show the account's real photo instead of initials.
+        this.activeUser = {
+          ...response.data,
+          picture: decoded.picture || null,
+          fullName: decoded.name || null,
         }
+
+        // Everyone lands on the same home; the sidebar adapts to the role.
+        router.push(this.role === 'ROLE_ADMIN' ? '/admin' : '/')
       } catch (err) {
         console.log(err)
       }

@@ -44,7 +44,27 @@ module.exports = (sequelize, Sequelize) => {
       preferenceChosen: {
         type: Sequelize.INTEGER
       }
+    }, {
+      // teacherId and studentId are added by the belongsToMany associations in
+      // models/index.js. Sequelize auto-generated a unique index for the
+      // teacher side that covered teacherId ALONE — despite being named
+      // ...teacherId_assignmentId_unique — which capped every teacher at a
+      // single assignment for the life of the database. Declaring both pairs
+      // explicitly keeps a teacher (or student) unique *per assignment*
+      // instead of globally.
+      indexes: [
+        {
+          unique: true,
+          name: 'ua_teacher_per_assignment',
+          fields: ['assignmentId', 'teacherId']
+        },
+        {
+          unique: true,
+          name: 'ua_student_per_assignment',
+          fields: ['assignmentId', 'studentId']
+        }
+      ]
     });
-  
+
     return UserAssignments;
   };

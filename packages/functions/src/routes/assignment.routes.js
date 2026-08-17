@@ -3,7 +3,9 @@ const assignments = require("../controllers/assignment.controller.js");
 const router = require("express").Router();
 
 module.exports = app => {
-  router.post("/", assignments.create);
+  // Teacher-only: the router below admits students too (they need to read
+  // assignments), so creation is gated separately.
+  router.post("/", authJwt.isTeacher, assignments.create);
   router.get("/:id", assignments.findOne);
   router.put("/:id", assignments.update);
   router.delete("/:id", assignments.delete);

@@ -5,7 +5,12 @@
  */
 const STORAGE_PREFIX = 'carousel:'
 
-export function persistPlugin({ store }) {
+export function persistPlugin({ store, options }) {
+  // Opt-in only. Persisting every store would cache one user's assignment list
+  // into the next session on the same browser — wrong, and a small privacy
+  // leak on a shared machine. Only the session itself should survive a reload.
+  if (!options.persist) return
+
   const key = STORAGE_PREFIX + store.$id
 
   const saved = localStorage.getItem(key)

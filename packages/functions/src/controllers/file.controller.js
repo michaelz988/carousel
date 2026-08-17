@@ -67,17 +67,35 @@ const upload = async (req, res) => {
           email: email.address
         }
       })
-        .then(([user, created]) => {
+        .then(async ([user, created]) => {
           console.log("Setting role for student");
           user.setRoles([3]);
-          user.setAssigned(assignmentId).then(async studentAssignments => {
-            const studentAssignment = studentAssignments[0][0];
-            await studentAssignment.setClassTeacher(teacherAssignment.id);
-            studentAssignment.period = classPeriod;
-            studentAssignment.save();
-          }).catch(err => {
-            console.log("Error setting student assignment");
-          });
+
+          try {
+            // `addAssigned`, not `setAssigned`: the setter replaces the whole
+            // collection, so importing a roster into one assignment silently
+            // removed those students from every other assignment they were on.
+            await user.addAssigned(assignmentId);
+
+            // Look the row up rather than relying on the add's return shape,
+            // which is empty when the student is already on the assignment —
+            // that way re-importing updates the period instead of throwing.
+            const studentAssignment = await UserAssignment.findOne({
+              where: {
+                assignmentId: assignmentId,
+                studentId: user.userId,
+                owner: 'student'
+              }
+            });
+
+            if (studentAssignment) {
+              await studentAssignment.setClassTeacher(teacherAssignment.id);
+              studentAssignment.period = classPeriod;
+              await studentAssignment.save();
+            }
+          } catch (err) {
+            console.log("Error setting student assignment", err.message);
+          }
         })
         .catch(err => {
           console.log("Error in processing email address");

@@ -9,9 +9,19 @@ export function displayName(user = {}, fallback = 'Account') {
   const full = [user.firstName, user.lastName].filter(Boolean).join(' ')
   return (
     full ||
+    user.fullName ||
     user.username ||
     (user.email ? user.email.split('@')[0] : fallback)
   )
+}
+
+/**
+ * Google account photo, captured from the sign-in credential.
+ * Null whenever it is unavailable — signing in through the local dev token,
+ * or an account with no photo — so callers fall back to initials.
+ */
+export function avatarUrl(user = {}) {
+  return user.picture || null
 }
 
 export function initials(user = {}) {

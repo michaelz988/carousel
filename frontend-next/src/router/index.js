@@ -1,12 +1,18 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Dashboard from '@/views/Dashboard.vue'
+import Home from '@/views/Home.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const routes = [
   {
     path: '/',
-    name: 'Dashboard',
-    component: Dashboard,
+    name: 'home',
+    component: Home,
+    meta: { requiresAuth: true, title: 'Home' },
+  },
+  {
+    path: '/assignments/:id',
+    name: 'assignment',
+    component: () => import('@/views/AssignmentDetail.vue'),
     meta: { requiresAuth: true },
   },
   {
@@ -18,29 +24,21 @@ const routes = [
     path: '/settings',
     name: 'settings',
     component: () => import('@/views/Settings.vue'),
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/student',
-    alias: '/student/dashboard',
-    name: 'student-dashboard',
-    component: () => import('@/views/Student.vue'),
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/teacher',
-    alias: '/teacher/dashboard',
-    name: 'teacher-dashboard',
-    component: () => import('@/views/Teacher.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, title: 'Account' },
   },
   {
     path: '/admin',
-    alias: '/admin/dashboard',
-    name: 'admin-dashboard',
+    name: 'admin',
     component: () => import('@/views/Admin.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, title: 'Teachers' },
   },
+  // The role-specific dashboards are gone — assignments are reached from the
+  // sidebar now. Keep the old paths working for anything already bookmarked.
+  { path: '/student', redirect: '/' },
+  { path: '/student/dashboard', redirect: '/' },
+  { path: '/teacher', redirect: '/' },
+  { path: '/teacher/dashboard', redirect: '/' },
+  { path: '/admin/dashboard', redirect: '/admin' },
 ]
 
 const router = createRouter({

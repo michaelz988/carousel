@@ -11,3 +11,6 @@ dist/
 
 # OS files
 .DS_Store
+
+# Roster files uploaded at runtime (samples in the repo are tracked already)
+backend/uploads/*.csv
