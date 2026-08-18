@@ -12,7 +12,10 @@ const auth = useAuthStore()
 const assignments = useAssignmentsStore()
 const route = useRoute()
 
-const showChrome = computed(() => auth.isAuthenticated && route.name !== 'Login')
+// Public pages (landing, login) render standalone, without the app shell.
+const showChrome = computed(
+  () => auth.isAuthenticated && route.matched.some((r) => r.meta.requiresAuth),
+)
 const mobileNavOpen = ref(false)
 const showCreate = ref(false)
 

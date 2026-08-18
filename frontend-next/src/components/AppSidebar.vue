@@ -36,7 +36,7 @@ onMounted(() => assignments.load())
   <div class="flex h-full flex-col gap-1 p-3">
     <!-- Brand -->
     <RouterLink
-      to="/"
+      to="/home"
       class="mb-2 flex items-center gap-2.5 rounded-lg px-2 py-2"
       @click="emit('navigate')"
     >
@@ -47,7 +47,7 @@ onMounted(() => assignments.load())
     </RouterLink>
 
     <RouterLink
-      to="/"
+      to="/home"
       class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-ink-600 transition hover:bg-brand-50 hover:text-brand-700"
       active-class="bg-brand-50 text-brand-700"
       exact-active-class="bg-brand-50 text-brand-700"

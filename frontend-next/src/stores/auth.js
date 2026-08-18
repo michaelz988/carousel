@@ -28,7 +28,7 @@ export const useAuthStore = defineStore('auth', {
     role: (s) => (s.activeUser.roles && s.activeUser.roles[0]) || '',
     accessToken: (s) => s.activeUser.accessToken,
     homeRoute() {
-      return this.role === 'ROLE_ADMIN' ? '/admin' : '/'
+      return this.role === 'ROLE_ADMIN' ? '/admin' : '/home'
     },
   },
 
@@ -59,7 +59,7 @@ export const useAuthStore = defineStore('auth', {
         }
 
         // Everyone lands on the same home; the sidebar adapts to the role.
-        router.push(this.role === 'ROLE_ADMIN' ? '/admin' : '/')
+        router.push(this.role === 'ROLE_ADMIN' ? '/admin' : '/home')
       } catch (err) {
         console.log(err)
       }
@@ -69,7 +69,7 @@ export const useAuthStore = defineStore('auth', {
       this.activeUser = {}
       this.activeAssignment = {}
       this.activeSchool = {}
-      router.push('/login')
+      router.push('/')
     },
 
     updateActiveAssignment(assignment) {

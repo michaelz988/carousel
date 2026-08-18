@@ -1,6 +1,8 @@
 <script setup>
 import { onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import PublicHeader from '@/components/PublicHeader.vue'
+import PublicFooter from '@/components/PublicFooter.vue'
 
 const auth = useAuthStore()
 
@@ -8,9 +10,8 @@ const CLIENT_ID =
   '921798240468-7ef6ep21omf9pv15m4ilpa07patqjeio.apps.googleusercontent.com'
 
 // --- Google Identity Services -------------------------------------------
-// Ported verbatim from the Vue 2 app: same client ID, same script URL, same
-// initialize/renderButton calls, same credential handler. Only the store call
-// at the end changed (Vuex dispatch -> Pinia action) because the store moved.
+// Unchanged: same client ID, same script URL, same initialize/renderButton
+// calls, same credential handler. Only the page around it was restyled.
 function handleCredentialResponse(googleUser) {
   auth.glogin(googleUser)
 }
@@ -22,7 +23,7 @@ function initializeGoogleSignIn() {
   })
   window.google.accounts.id.renderButton(
     document.getElementById('g_id_signin'),
-    { theme: 'outline', size: 'large', width: 250 },
+    { theme: 'outline', size: 'large', width: 280 },
   )
 }
 
@@ -41,85 +42,55 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="grid min-h-screen lg:grid-cols-2">
-    <!-- Brand panel -->
-    <section
-      class="relative hidden flex-col justify-center overflow-hidden bg-brand-800 px-12 py-16 text-white lg:flex"
-    >
-      <div
-        class="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-brand-600/40 blur-3xl"
-        aria-hidden="true"
-      />
-      <div class="relative max-w-lg">
-        <div class="mb-10 flex items-center gap-3">
-          <span
-            class="grid h-11 w-11 place-items-center rounded-xl bg-white/10 font-display text-lg font-semibold"
-            aria-hidden="true"
-          >
-            C
-          </span>
-          <span class="font-display text-3xl font-semibold">Carousel</span>
-        </div>
+  <div class="flex min-h-screen flex-col bg-ink-50">
+    <PublicHeader :show-login="false" />
 
-        <h1 class="font-display text-4xl leading-tight font-medium">
-          Fair assignment of Persons of American Significance.
-        </h1>
-        <p class="mt-5 text-lg leading-relaxed text-white/80">
-          Students rank the figures they want to research. Carousel runs a
-          transparent lottery so every student receives a unique POAS.
-        </p>
-
-        <p class="mt-10 text-sm text-white/60">
-          Made in open source by
-          <a
-            href="https://code4real.org/"
-            target="_blank"
-            class="underline underline-offset-4 hover:text-white"
-          >
-            Code4Real
-          </a>
-          .
-        </p>
-      </div>
-    </section>
-
-    <!-- Sign-in panel -->
-    <section class="flex items-center justify-center px-5 py-16 sm:px-8">
+    <main class="flex flex-1 items-center justify-center px-5 py-14 sm:px-6">
       <div class="w-full max-w-md">
-        <div class="mb-8 flex items-center gap-3 lg:hidden">
-          <span
-            class="grid h-10 w-10 place-items-center rounded-xl bg-brand-600 font-display font-semibold text-white"
-            aria-hidden="true"
-          >
-            C
-          </span>
-          <span class="font-display text-2xl font-semibold text-brand-700">
-            Carousel
-          </span>
-        </div>
-
         <div class="card p-8">
-          <h2 class="font-display text-2xl font-semibold">Welcome</h2>
-          <p class="mt-1 text-ink-500">Sign in with your Google account.</p>
+          <h1 class="font-display text-2xl font-semibold text-ink-900">
+            Log in to Carousel
+          </h1>
+          <p class="mt-1.5 text-ink-500">
+            Carousel uses your Google account — there is no separate password.
+          </p>
 
           <dl class="my-7 divide-y divide-ink-100 border-y border-ink-100">
-            <div class="py-3 text-sm">
-              <dt class="font-semibold text-ink-900">Teachers</dt>
-              <dd class="mt-0.5 text-ink-500">
-                Use the Google account added to the system by your
-                administrator.
+            <div class="py-3.5 text-sm">
+              <dt class="font-semibold text-ink-900">Students</dt>
+              <dd class="mt-0.5 leading-relaxed text-ink-500">
+                Use your school Google account — the same one your teacher used
+                for the class roster.
               </dd>
             </div>
-            <div class="py-3 text-sm">
-              <dt class="font-semibold text-ink-900">Students</dt>
-              <dd class="mt-0.5 text-ink-500">Use your school Google account.</dd>
+            <div class="py-3.5 text-sm">
+              <dt class="font-semibold text-ink-900">Teachers</dt>
+              <dd class="mt-0.5 leading-relaxed text-ink-500">
+                Use the Google account your administrator added to Carousel.
+              </dd>
             </div>
           </dl>
 
           <!-- Google renders its button into this element -->
           <div id="g_id_signin" class="flex justify-center" />
+
+          <p class="mt-6 text-center text-xs leading-relaxed text-ink-400">
+            If sign-in is refused, your account has not been added to Carousel
+            yet. Ask your teacher or administrator to add it.
+          </p>
         </div>
+
+        <p class="mt-6 text-center text-sm">
+          <RouterLink
+            to="/"
+            class="text-ink-500 underline underline-offset-4 hover:text-ink-800"
+          >
+            Back to the overview
+          </RouterLink>
+        </p>
       </div>
-    </section>
+    </main>
+
+    <PublicFooter />
   </div>
 </template>
