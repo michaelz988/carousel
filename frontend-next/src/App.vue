@@ -49,7 +49,7 @@ watch(() => route.fullPath, () => {
       <!-- Drawer sits below the full-width header -->
       <aside
         v-show="navOpen"
-        class="fixed inset-y-16 left-0 z-30 w-[300px] overflow-y-auto bg-ink-50 lg:sticky lg:top-16 lg:z-auto lg:h-[calc(100vh-4rem)] lg:shrink-0"
+        class="fixed inset-y-16 left-0 z-30 w-[300px] overflow-y-auto bg-ink-50 lg:sticky lg:top-16 lg:z-auto lg:max-h-[calc(100vh-4rem)] lg:shrink-0 lg:self-start"
       >
         <AppSidebar @navigate="() => {}" />
       </aside>
@@ -60,15 +60,14 @@ watch(() => route.fullPath, () => {
         @click="navOpen = false"
       />
 
-      <div class="flex min-w-0 flex-1 flex-col">
-        <main class="flex-1">
-          <RouterView v-slot="{ Component }">
-            <component :is="Component" @create="showCreate = true" />
-          </RouterView>
-        </main>
-        <SiteFooter />
-      </div>
+      <main class="min-w-0 flex-1">
+        <RouterView v-slot="{ Component }">
+          <component :is="Component" @create="showCreate = true" />
+        </RouterView>
+      </main>
     </div>
+
+    <SiteFooter />
 
     <CreateAssignmentModal v-if="showCreate" @close="showCreate = false" />
   </div>
