@@ -29,9 +29,20 @@ http.interceptors.response.use(
     const status = error.response?.status
 
     // 401/403 both mean the session is no longer usable (the API returns 403
-    // for a missing or invalid token), so send the user back to sign in.
+    // for a missing or invalid token), so send the user back to sign in —
+    // but only if they still believe they are signed in.
+    //
+    // On sign-out the token is cleared while requests may still be in flight.
+    // Those come back 403, and redirecting on them would override the
+    // navigation sign-out just started, landing the user on /login instead of
+    // the page they were sent to.
     if (status === 401 || status === 403) {
-      if (router.currentRoute.value.path !== '/login') router.push('/login')
+      if (
+        useAuthStore().isAuthenticated &&
+        router.currentRoute.value.path !== '/login'
+      ) {
+        router.push('/login')
+      }
     } else {
       notify('Request failed. Please try again.')
       // Deliberately no redirect here. The Vue 2 app pushed '/' on every
