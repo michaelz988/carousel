@@ -16,5 +16,8 @@ module.exports = function(app) {
   router.post("/teacher", teacherController.create);
   router.delete("/teacher", teacherController.deleteAll);
 
+  // Remove a single Teacher
+  router.delete("/teacher/:id", teacherController.deleteOne);
+
   app.use("/api/admin", authJwt.verifyToken, authJwt.isAdmin, router);
 };
