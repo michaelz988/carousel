@@ -1,6 +1,6 @@
 <script setup>
 import PublicHeader from '@/components/PublicHeader.vue'
-import PublicFooter from '@/components/PublicFooter.vue'
+import SiteFooter from '@/components/SiteFooter.vue'
 import GoogleSignIn from '@/components/GoogleSignIn.vue'
 </script>
 
@@ -31,6 +31,6 @@ import GoogleSignIn from '@/components/GoogleSignIn.vue'
       </div>
     </main>
 
-    <PublicFooter />
+    <SiteFooter />
   </div>
 </template>

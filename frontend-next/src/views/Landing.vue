@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import PublicHeader from '@/components/PublicHeader.vue'
-import PublicFooter from '@/components/PublicFooter.vue'
+import SiteFooter from '@/components/SiteFooter.vue'
 import CarouselScene from '@/components/CarouselScene.vue'
 import LoginDialog from '@/components/LoginDialog.vue'
 
@@ -111,7 +111,7 @@ const workflow = [
       </section>
     </main>
 
-    <PublicFooter />
+    <SiteFooter />
 
     <LoginDialog v-if="showLogin" @close="showLogin = false" />
   </div>

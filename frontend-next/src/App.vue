@@ -6,6 +6,7 @@ import AppSidebar from '@/components/AppSidebar.vue'
 import AppTopbar from '@/components/AppTopbar.vue'
 import ToastHost from '@/components/ToastHost.vue'
 import CreateAssignmentModal from '@/components/CreateAssignmentModal.vue'
+import SiteFooter from '@/components/SiteFooter.vue'
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -59,11 +60,14 @@ watch(() => route.fullPath, () => {
         @click="navOpen = false"
       />
 
-      <main class="min-w-0 flex-1">
-        <RouterView v-slot="{ Component }">
-          <component :is="Component" @create="showCreate = true" />
-        </RouterView>
-      </main>
+      <div class="flex min-w-0 flex-1 flex-col">
+        <main class="flex-1">
+          <RouterView v-slot="{ Component }">
+            <component :is="Component" @create="showCreate = true" />
+          </RouterView>
+        </main>
+        <SiteFooter />
+      </div>
     </div>
 
     <CreateAssignmentModal v-if="showCreate" @close="showCreate = false" />

@@ -6,7 +6,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useAssignmentsStore } from '@/stores/assignments'
 import { displayName, roleLabel, roleBadgeClass } from '@/lib/user'
 import UserAvatar from '@/components/UserAvatar.vue'
-import logoUrl from '@/assets/logo.png'
+import CarouselMark from '@/components/CarouselMark.vue'
 
 const emit = defineEmits(['toggle-nav', 'create'])
 
@@ -40,8 +40,11 @@ const iconBtn =
     </button>
 
     <!-- Brand lives in the header, not the drawer -->
-    <RouterLink to="/home" class="ml-1 flex items-center gap-2.5 rounded-lg px-2 py-1">
-      <img :src="logoUrl" alt="" class="h-8 w-8 shrink-0 object-contain" />
+    <RouterLink
+      to="/home"
+      class="ml-1 flex items-center gap-2.5 rounded-lg px-2 py-1 text-brand-600"
+    >
+      <CarouselMark :size="32" />
       <span class="text-2xl font-normal text-ink-700">Carousel</span>
     </RouterLink>
 
