@@ -3,12 +3,13 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   HomeIcon,
-  ChevronDownIcon,
+  ChevronUpIcon,
   AcademicCapIcon,
   ClipboardDocumentListIcon,
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
 import { useAssignmentsStore } from '@/stores/assignments'
+import { lotteryState } from '@/lib/lottery'
 
 const emit = defineEmits(['navigate'])
 
@@ -23,47 +24,47 @@ const open = ref(true)
 const activeId = computed(() => route.params.id ?? null)
 watch(activeId, (id) => { if (id) open.value = true })
 
-// Material drawer rows: 48px tall, icon + label, and a pill that runs to the
-// drawer's right edge — the shape Classroom uses for the selected class.
+// Measured from Classroom: rows are 48px, and the selected state is a pill
+// inset 12px on BOTH sides with full rounding — not a bar running to the edge.
 const row =
-  'flex h-12 items-center gap-4 rounded-r-full pl-6 pr-4 text-sm transition select-none'
+  'mx-3 flex items-center gap-5 rounded-full px-4 text-sm transition select-none'
 const idle = 'text-ink-700 hover:bg-ink-100'
-const active = 'bg-brand-50 font-semibold text-brand-800'
+const active = 'bg-brand-100 font-medium text-brand-800'
 
 onMounted(() => assignments.load())
 </script>
 
 <template>
-  <nav class="flex h-full flex-col py-3" aria-label="Main">
+  <nav class="flex h-full flex-col py-2" aria-label="Main">
     <RouterLink
       to="/home"
-      :class="[row, $route.path === '/home' ? active : idle]"
+      :class="[row, 'h-12', $route.path === '/home' ? active : idle]"
       @click="emit('navigate')"
     >
-      <HomeIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+      <HomeIcon class="h-6 w-6 shrink-0" aria-hidden="true" />
       Home
     </RouterLink>
 
-    <hr class="my-3 border-ink-200" />
+    <hr class="mx-3 my-2 border-ink-200" />
 
-    <!-- Assignments -->
+    <!-- Collapsible group, matching Classroom's "Enrolled" section -->
     <button
       type="button"
-      :class="[row, idle, 'w-full']"
+      :class="[row, 'h-12', idle]"
       :aria-expanded="open"
       @click="open = !open"
     >
-      <ClipboardDocumentListIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+      <ClipboardDocumentListIcon class="h-6 w-6 shrink-0" aria-hidden="true" />
       <span class="flex-1 text-left">Assignments</span>
-      <ChevronDownIcon
+      <ChevronUpIcon
         class="h-4 w-4 shrink-0 transition-transform"
-        :class="!open && '-rotate-90'"
+        :class="!open && 'rotate-180'"
         aria-hidden="true"
       />
     </button>
 
-    <div v-if="open" class="mt-0.5">
-      <p v-if="assignments.loading" class="px-6 py-2 text-xs text-ink-400">
+    <div v-if="open">
+      <p v-if="assignments.loading" class="px-7 py-2 text-xs text-ink-400">
         Loading…
       </p>
 
@@ -73,13 +74,14 @@ onMounted(() => assignments.load())
           :key="a.assignmentId"
           :to="`/assignments/${a.assignmentId}`"
           :class="[
-            'flex min-h-12 items-center gap-4 rounded-r-full py-2.5 pr-4 pl-6 text-sm transition',
+            row,
+            'min-h-12 py-2',
             String(a.assignmentId) === String(activeId) ? active : idle,
           ]"
           @click="emit('navigate')"
         >
           <span
-            class="grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-semibold"
+            class="grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-medium"
             :class="
               String(a.assignmentId) === String(activeId)
                 ? 'bg-brand-600 text-white'
@@ -89,11 +91,17 @@ onMounted(() => assignments.load())
           >
             {{ a.title.trim().charAt(0).toUpperCase() }}
           </span>
-          <span class="line-clamp-2 leading-snug">{{ a.title }}</span>
+          <span class="min-w-0 flex-1">
+            <span class="block truncate leading-tight">{{ a.title }}</span>
+            <!-- Secondary line, where Classroom shows the class section -->
+            <span class="block truncate text-xs leading-tight text-ink-500">
+              {{ lotteryState(a.state).label }}
+            </span>
+          </span>
         </RouterLink>
       </template>
 
-      <p v-else class="px-6 py-2 text-xs leading-relaxed text-ink-400">
+      <p v-else class="px-7 py-2 text-xs leading-relaxed text-ink-400">
         {{
           isTeacher
             ? 'No assignments yet. Use + in the header to create one.'
@@ -103,13 +111,13 @@ onMounted(() => assignments.load())
     </div>
 
     <template v-if="isAdmin">
-      <hr class="my-3 border-ink-200" />
+      <hr class="mx-3 my-2 border-ink-200" />
       <RouterLink
         to="/admin"
-        :class="[row, $route.path === '/admin' ? active : idle]"
+        :class="[row, 'h-12', $route.path === '/admin' ? active : idle]"
         @click="emit('navigate')"
       >
-        <AcademicCapIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+        <AcademicCapIcon class="h-6 w-6 shrink-0" aria-hidden="true" />
         Teachers
       </RouterLink>
     </template>

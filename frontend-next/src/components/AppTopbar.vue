@@ -28,7 +28,7 @@ const iconBtn =
 
 <template>
   <header
-    class="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-1 border-b border-ink-200 bg-white px-2 sm:px-4"
+    class="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-1 bg-ink-50 px-2 sm:px-4"
   >
     <button
       type="button"
@@ -42,9 +42,7 @@ const iconBtn =
     <!-- Brand lives in the header, not the drawer -->
     <RouterLink to="/home" class="ml-1 flex items-center gap-2.5 rounded-lg px-2 py-1">
       <img :src="logoUrl" alt="" class="h-8 w-8 shrink-0 object-contain" />
-      <span class="font-display text-xl font-semibold text-brand-700">
-        Carousel
-      </span>
+      <span class="text-2xl font-normal text-ink-700">Carousel</span>
     </RouterLink>
 
     <div class="ml-auto flex items-center gap-1 sm:gap-2">

@@ -48,7 +48,7 @@ watch(() => route.fullPath, () => {
       <!-- Drawer sits below the full-width header -->
       <aside
         v-show="navOpen"
-        class="fixed inset-y-16 left-0 z-30 w-[280px] overflow-y-auto border-r border-ink-200 bg-white lg:sticky lg:top-16 lg:z-auto lg:h-[calc(100vh-4rem)] lg:shrink-0"
+        class="fixed inset-y-16 left-0 z-30 w-[300px] overflow-y-auto bg-ink-50 lg:sticky lg:top-16 lg:z-auto lg:h-[calc(100vh-4rem)] lg:shrink-0"
       >
         <AppSidebar @navigate="() => {}" />
       </aside>
