@@ -1,57 +1,65 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { useAssignmentsStore } from '@/stores/assignments'
 import AppSidebar from '@/components/AppSidebar.vue'
 import AppTopbar from '@/components/AppTopbar.vue'
 import ToastHost from '@/components/ToastHost.vue'
 import CreateAssignmentModal from '@/components/CreateAssignmentModal.vue'
 
 const auth = useAuthStore()
-const assignments = useAssignmentsStore()
 const route = useRoute()
 
 // Public pages (landing, login) render standalone, without the app shell.
 const showChrome = computed(
   () => auth.isAuthenticated && route.matched.some((r) => r.meta.requiresAuth),
 )
-const mobileNavOpen = ref(false)
+
+// A persistent drawer on desktop, a modal one on small screens — the way
+// Classroom's hamburger behaves. The default follows the breakpoint, and
+// crossing it resets to that default, so widening the window brings the
+// drawer back rather than leaving it hidden with no explanation.
+const desktopQuery = window.matchMedia('(min-width: 1024px)')
+const isDesktop = ref(desktopQuery.matches)
+const navOpen = ref(desktopQuery.matches)
 const showCreate = ref(false)
 
-const pageTitle = computed(() => {
-  if (route.params.id) {
-    return assignments.byId(route.params.id)?.title ?? 'Assignment'
-  }
-  return route.meta?.title ?? ''
-})
+function onBreakpointChange(e) {
+  isDesktop.value = e.matches
+  navOpen.value = e.matches
+}
 
-watch(() => route.fullPath, () => { mobileNavOpen.value = false })
+onMounted(() => desktopQuery.addEventListener('change', onBreakpointChange))
+onBeforeUnmount(() =>
+  desktopQuery.removeEventListener('change', onBreakpointChange),
+)
+
+// The mobile drawer covers the page, so close it once navigation happens.
+watch(() => route.fullPath, () => {
+  if (!isDesktop.value) navOpen.value = false
+})
 </script>
 
 <template>
-  <div v-if="showChrome" class="min-h-screen lg:grid lg:grid-cols-[264px_minmax(0,1fr)]">
-    <!-- Sidebar: fixed drawer on small screens, a column on large -->
-    <aside
-      class="fixed inset-y-0 left-0 z-50 w-[264px] overflow-y-auto border-r border-ink-200 bg-white transition-transform lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:translate-x-0"
-      :class="mobileNavOpen ? 'translate-x-0' : '-translate-x-full'"
-    >
-      <AppSidebar
-        @create="showCreate = true"
-        @navigate="mobileNavOpen = false"
+  <div v-if="showChrome" class="flex min-h-screen flex-col bg-ink-50">
+    <AppTopbar @toggle-nav="navOpen = !navOpen" @create="showCreate = true" />
+
+    <div class="flex flex-1">
+      <!-- Drawer sits below the full-width header -->
+      <aside
+        v-show="navOpen"
+        class="fixed inset-y-16 left-0 z-30 w-[280px] overflow-y-auto border-r border-ink-200 bg-white lg:sticky lg:top-16 lg:z-auto lg:h-[calc(100vh-4rem)] lg:shrink-0"
+      >
+        <AppSidebar @navigate="() => {}" />
+      </aside>
+
+      <div
+        v-if="navOpen"
+        class="fixed inset-0 top-16 z-20 bg-ink-900/40 lg:hidden"
+        @click="navOpen = false"
       />
-    </aside>
 
-    <div
-      v-if="mobileNavOpen"
-      class="fixed inset-0 z-40 bg-ink-900/40 lg:hidden"
-      @click="mobileNavOpen = false"
-    />
-
-    <div class="flex min-w-0 flex-col">
-      <AppTopbar :title="pageTitle" @toggle-sidebar="mobileNavOpen = !mobileNavOpen" />
-      <main class="flex-1">
-        <!-- v-slot so routed views can ask the shell to open the create modal -->
+      <main class="min-w-0 flex-1">
         <RouterView v-slot="{ Component }">
           <component :is="Component" @create="showCreate = true" />
         </RouterView>
