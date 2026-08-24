@@ -39,6 +39,40 @@ exports.findAll = async (req, res) => {
 };
 
 // Delete all teachers from a given school
+// Remove a single teacher.
+exports.deleteOne = async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+
+  if (!id) {
+    return res.status(400).send({ message: "A teacher id is required." });
+  }
+
+  try {
+    const user = await User.findByPk(id);
+    if (!user) {
+      return res.status(404).send({ message: "Teacher not found." });
+    }
+
+    // The id comes from the client, so confirm the target really is a teacher.
+    // Without this check the route would delete any account by id, including
+    // students and other admins.
+    const roles = await user.getRoles();
+    if (!roles.some(r => r.name === "teacher")) {
+      return res
+        .status(400)
+        .send({ message: "That account is not a teacher." });
+    }
+
+    await user.destroy();
+    res.send({ id: id });
+  } catch(err) {
+    res.status(500).send({
+      message:
+        err.message || "Some error occurred while removing the teacher."
+    });
+  }
+};
+
 exports.deleteAll = async (req, res) => {
   const uid = req.userId; // always an admin
   const schoolId = parseInt(req.query.school);

@@ -41,7 +41,8 @@ db.user.belongsToMany(db.role, {
 db.assignment.belongsToMany(db.user, {
   through: {
     model: "user_assignments",
-    scope: { owner: 'teacher'}
+    scope: { owner: 'teacher'},
+    unique: false
   },
   foreignKey: 'assignmentId',
   otherKey: "teacherId",
@@ -50,7 +51,8 @@ db.assignment.belongsToMany(db.user, {
 db.assignment.belongsToMany(db.user, {
   through: {
     model: "user_assignments",
-    scope: { owner: 'student'}
+    scope: { owner: 'student'},
+    unique: false
   },
   foreignKey: 'assignmentId',
   otherKey: "studentId",
@@ -60,7 +62,8 @@ db.assignment.belongsToMany(db.user, {
 db.user.belongsToMany(db.assignment, {
   through: {
     model: "user_assignments",
-    scope: { owner: 'teacher'}
+    scope: { owner: 'teacher'},
+    unique: false
   },
   foreignKey: 'teacherId',
   otherKey: 'assignmentId',
@@ -69,7 +72,8 @@ db.user.belongsToMany(db.assignment, {
 db.user.belongsToMany(db.assignment, {
   through: {
     model: "user_assignments",
-    scope: { owner: 'student'}
+    scope: { owner: 'student'},
+    unique: false
   },
   foreignKey: 'studentId',
   otherKey: 'assignmentId',

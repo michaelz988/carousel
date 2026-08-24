@@ -1,4 +1,18 @@
+<script>
+/**
+ * Stack of currently-open modals, shared across every AppModal instance.
+ *
+ * Headless UI only closes on Escape while focus sits inside the dialog. When a
+ * nested modal (e.g. a confirmation) closes, focus lands back on <body>, and
+ * Escape then does nothing — leaving keyboard users trapped in the modal
+ * underneath. Tracking the stack lets the topmost modal handle Escape itself,
+ * regardless of where focus currently is.
+ */
+const modalStack = []
+</script>
+
 <script setup>
+import { onBeforeUnmount, onMounted } from 'vue'
 import {
   Dialog,
   DialogPanel,
@@ -29,6 +43,27 @@ const sizes = {
   lg: 'max-w-4xl',
   xl: 'max-w-6xl',
 }
+
+// Identity for this instance's slot in the shared stack.
+const token = Symbol('app-modal')
+
+function onKeydown(event) {
+  if (event.key !== 'Escape') return
+  // Only the topmost modal responds, so Escape peels them off one at a time.
+  if (modalStack[modalStack.length - 1] !== token) return
+  emit('close')
+}
+
+onMounted(() => {
+  modalStack.push(token)
+  document.addEventListener('keydown', onKeydown)
+})
+
+onBeforeUnmount(() => {
+  const i = modalStack.indexOf(token)
+  if (i !== -1) modalStack.splice(i, 1)
+  document.removeEventListener('keydown', onKeydown)
+})
 </script>
 
 <template>

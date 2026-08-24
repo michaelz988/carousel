@@ -9,9 +9,19 @@ export function displayName(user = {}, fallback = 'Account') {
   const full = [user.firstName, user.lastName].filter(Boolean).join(' ')
   return (
     full ||
+    user.fullName ||
     user.username ||
     (user.email ? user.email.split('@')[0] : fallback)
   )
+}
+
+/**
+ * Google account photo, captured from the sign-in credential.
+ * Null whenever it is unavailable — signing in through the local dev token,
+ * or an account with no photo — so callers fall back to initials.
+ */
+export function avatarUrl(user = {}) {
+  return user.picture || null
 }
 
 export function initials(user = {}) {
@@ -46,18 +56,5 @@ export function roleBadgeClass(role) {
   }
 }
 
-/** Lottery state -> human label + pill styling. */
-export function lotteryState(state) {
-  switch (state) {
-    case 0:
-      return { label: 'Open for entries', cls: 'bg-brand-50 text-brand-700' }
-    case 1:
-      return { label: 'Entries locked', cls: 'bg-accent-gold-soft text-accent-gold' }
-    case 2:
-      return { label: 'Lottery in progress', cls: 'bg-accent-blue-soft text-accent-blue' }
-    case 3:
-      return { label: 'Completed', cls: 'bg-ink-100 text-ink-600' }
-    default:
-      return { label: 'Unknown', cls: 'bg-ink-100 text-ink-600' }
-  }
-}
+// Lottery lifecycle helpers live in `lib/lottery.js` — they are domain logic
+// shared by both roles, not user presentation.

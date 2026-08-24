@@ -10,6 +10,10 @@ class TeacherDataService {
     return http.get(`/admin/teacher?school=${id}`);
   }
 
+  deleteTeacher(teacherId) {
+    return http.delete(`/admin/teacher/${teacherId}`);
+  }
+
   deleteAllTeachers(schoolId) {
     return http.delete(`/admin/teacher?school=${schoolId}`);
   }

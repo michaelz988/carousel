@@ -8,12 +8,14 @@ import AppModal from '@/components/AppModal.vue'
 import AppButton from '@/components/AppButton.vue'
 import DataTable from '@/components/DataTable.vue'
 import LotteryModal from '@/components/LotteryModal.vue'
+import LotteryStatus from '@/components/LotteryStatus.vue'
+import LotteryPreflight from '@/components/LotteryPreflight.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { notify } from '@/lib/notify'
+import { COMPLETED, submissionProgress } from '@/lib/lottery'
 
 const emit = defineEmits(['close'])
 const auth = useAuthStore()
-
-const LOTTERY_STEPS = ['Open', 'Locked', 'In progress', 'Completed']
 
 const fields = [
   'index',
@@ -55,6 +57,32 @@ const tableRef = ref(null)
 
 const state = computed(() => auth.activeAssignment.state)
 
+// Which destructive action is awaiting confirmation: 'lock' | 'reopen' | null
+const pendingAction = ref(null)
+const actionBusy = ref(false)
+
+// Students in the signed-in teacher's own sections, used to warn about
+// unsubmitted work before locking. Scoped deliberately — see LotteryPreflight.
+const myStudents = computed(() =>
+  students.value.filter((s) => {
+    const t = s.ClassTeacher?.Teacher
+    return String(t?.userId ?? t?.id) === String(auth.activeUser.id)
+  }),
+)
+
+const notReadyCount = computed(
+  () =>
+    myStudents.value.filter(
+      (s) =>
+        !submissionProgress(s.lotteries ?? [], auth.activeAssignment.minEntries)
+          .complete,
+    ).length,
+)
+
+const assignedCount = computed(
+  () => students.value.filter((s) => s.poa).length,
+)
+
 function retrieveLotteryResult(assignmentId) {
   return TeacherDataService.showLottery(assignmentId)
     .then((response) => {
@@ -71,21 +99,46 @@ async function refreshList() {
   currentStudent.value = null
 }
 
+// Locking is gated when students still have incomplete submissions, so it is
+// a deliberate choice rather than a click.
+function requestLock() {
+  if (notReadyCount.value > 0) {
+    pendingAction.value = 'lock'
+    return
+  }
+  lockLottery()
+}
+
 async function lockLottery() {
-  const response = await TeacherDataService.lockLottery(
-    auth.activeAssignment.assignmentId,
-  )
-  auth.updateActiveAssignment(response.data)
+  actionBusy.value = true
+  try {
+    const response = await TeacherDataService.lockLottery(
+      auth.activeAssignment.assignmentId,
+    )
+    auth.updateActiveAssignment(response.data)
+  } finally {
+    actionBusy.value = false
+    pendingAction.value = null
+  }
+}
+
+function requestReopen() {
+  pendingAction.value = 'reopen'
 }
 
 async function unlockLottery() {
-  if (!window.confirm('All assigned POAS will be lost. Are you sure?')) return
+  actionBusy.value = true
   isBusy.value = true
-  const response = await TeacherDataService.unlockLottery(
-    auth.activeAssignment.assignmentId,
-  )
-  auth.updateActiveAssignment(response.data)
-  await refreshList()
+  try {
+    const response = await TeacherDataService.unlockLottery(
+      auth.activeAssignment.assignmentId,
+    )
+    auth.updateActiveAssignment(response.data)
+    await refreshList()
+  } finally {
+    actionBusy.value = false
+    pendingAction.value = null
+  }
 }
 
 async function runLottery() {
@@ -158,57 +211,36 @@ onMounted(async () => {
 
 <template>
   <AppModal title="Lottery administration" size="xl" @close="emit('close')">
-    <!-- Progress steps -->
-    <ol class="mb-6 flex items-center gap-2" aria-label="Lottery progress">
-      <li
-        v-for="(step, i) in LOTTERY_STEPS"
-        :key="step"
-        class="flex flex-1 items-center gap-2"
-      >
-        <span
-          class="grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-bold transition"
-          :class="
-            i <= state
-              ? 'bg-brand-600 text-white'
-              : 'border border-ink-200 bg-white text-ink-400'
-          "
-        >
-          {{ i + 1 }}
-        </span>
-        <span
-          class="hidden text-xs font-semibold sm:block"
-          :class="i <= state ? 'text-brand-700' : 'text-ink-400'"
-        >
-          {{ step }}
-        </span>
-        <span
-          v-if="i < LOTTERY_STEPS.length - 1"
-          class="ml-1 h-px flex-1"
-          :class="i < state ? 'bg-brand-500' : 'bg-ink-200'"
-          aria-hidden="true"
-        />
-      </li>
-    </ol>
+    <!-- Shared lifecycle rail + what this state means for a teacher -->
+    <LotteryStatus :state="state" role="teacher" class="mb-5" />
+
+    <LotteryPreflight
+      v-if="state !== COMPLETED"
+      class="mb-5"
+      :students="students"
+      :min-entries="auth.activeAssignment.minEntries"
+      :teacher-id="auth.activeUser.id"
+    />
 
     <!-- State actions -->
     <div class="mb-5 flex flex-wrap items-center gap-2">
       <template v-if="state === 0">
-        <AppButton @click="lockLottery">Lock lottery entries</AppButton>
+        <AppButton @click="requestLock">Lock lottery entries</AppButton>
       </template>
       <template v-else-if="state === 1">
         <AppButton @click="runLottery">Run lottery</AppButton>
-        <AppButton variant="secondary" @click="unlockLottery">
+        <AppButton variant="secondary" @click="requestReopen">
           Reopen lottery
         </AppButton>
       </template>
       <template v-else-if="state === 2">
         <AppButton @click="resumeLottery">Resume lottery</AppButton>
-        <AppButton variant="secondary" @click="unlockLottery">
+        <AppButton variant="secondary" @click="requestReopen">
           Reopen lottery
         </AppButton>
       </template>
       <template v-else-if="state === 3">
-        <AppButton variant="secondary" @click="unlockLottery">
+        <AppButton variant="secondary" @click="requestReopen">
           Reopen lottery
         </AppButton>
       </template>
@@ -296,11 +328,62 @@ onMounted(async () => {
       </template>
     </DataTable>
 
-    <!-- Teacher drilling into one student's entries -->
-    <LotteryModal
-      v-if="currentStudent"
-      :student="currentStudent.studentId"
-      @close="currentStudent = null"
-    />
   </AppModal>
+
+  <!--
+    Rendered as siblings of the modal, not children. Nesting one Headless UI
+    Dialog inside another left focus on <body> when the inner one closed, so
+    Escape no longer reached the outer dialog and keyboard users were stuck
+    in it.
+  -->
+  <LotteryModal
+    v-if="currentStudent"
+    :student="currentStudent.studentId"
+    @close="currentStudent = null"
+  />
+
+  <ConfirmDialog
+      v-if="pendingAction === 'lock'"
+      title="Lock entries before everyone has submitted?"
+      confirm-label="Lock entries anyway"
+      variant="danger"
+      :busy="actionBusy"
+      @cancel="pendingAction = null"
+      @confirm="lockLottery"
+    >
+      <p>
+        <strong>{{ notReadyCount }}</strong>
+        of your students
+        {{ notReadyCount === 1 ? 'has' : 'have' }}
+        not finished submitting their choices.
+      </p>
+      <p class="mt-2">
+        Locking now stops them editing, and they will take part in the lottery
+        with whatever they have saved so far.
+      </p>
+    </ConfirmDialog>
+
+    <ConfirmDialog
+      v-if="pendingAction === 'reopen'"
+      title="Reopen the lottery?"
+      confirm-label="Reopen and clear assignments"
+      variant="danger"
+      :busy="actionBusy"
+      @cancel="pendingAction = null"
+      @confirm="unlockLottery"
+    >
+      <p>
+        This clears
+        <strong>
+          {{ assignedCount }}
+          {{ assignedCount === 1 ? 'assignment' : 'assignments' }}
+        </strong>
+        and reopens entries for editing.
+      </p>
+      <p v-if="state === COMPLETED" class="mt-2">
+        Students have already been able to see which POAS they received. If you
+        reopen, those results disappear and may change when you run the lottery
+        again — you will probably want to tell them.
+      </p>
+  </ConfirmDialog>
 </template>
