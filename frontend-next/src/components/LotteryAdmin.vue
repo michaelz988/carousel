@@ -328,21 +328,19 @@ onMounted(async () => {
       </template>
     </DataTable>
 
-  </AppModal>
+    <!--
+      Nested inside the modal, not siblings of it. Headless UI detects a nested
+      Dialog through provide/inject, so a sibling dialog is treated as "outside"
+      and its first click closes this modal before the button's own handler runs.
+      Escape still peels modals off one at a time via AppModal's modalStack.
+    -->
+    <LotteryModal
+      v-if="currentStudent"
+      :student="currentStudent.studentId"
+      @close="currentStudent = null"
+    />
 
-  <!--
-    Rendered as siblings of the modal, not children. Nesting one Headless UI
-    Dialog inside another left focus on <body> when the inner one closed, so
-    Escape no longer reached the outer dialog and keyboard users were stuck
-    in it.
-  -->
-  <LotteryModal
-    v-if="currentStudent"
-    :student="currentStudent.studentId"
-    @close="currentStudent = null"
-  />
-
-  <ConfirmDialog
+    <ConfirmDialog
       v-if="pendingAction === 'lock'"
       title="Lock entries before everyone has submitted?"
       confirm-label="Lock entries anyway"
@@ -385,5 +383,6 @@ onMounted(async () => {
         reopen, those results disappear and may change when you run the lottery
         again — you will probably want to tell them.
       </p>
-  </ConfirmDialog>
+    </ConfirmDialog>
+  </AppModal>
 </template>
