@@ -174,10 +174,10 @@ exports.runLottery = async (req, res) => {
       for (let i = 0; i < 3; i++) {
         common.shuffleOnce(studentAssignments);
       }
-      studentAssignments.forEach((studentAssignment, index) => {
+      for (const [index, studentAssignment] of studentAssignments.entries()) {
         studentAssignment.sequence = index + 1;
-        studentAssignment.save();
-      });
+        await studentAssignment.save();
+      }
     } else {
       studentAssignments = await assignment.getStudentAssignments({
         order: [['sequence', 'ASC']]
@@ -215,7 +215,7 @@ exports.runLottery = async (req, res) => {
 
     if (isCompleted) assignment.state = 3;
     else assignment.state = 2;
-    assignment.save();
+    await assignment.save();
     res.send(assignment);
   } catch(err) {
     res.status(500).send({
@@ -233,7 +233,7 @@ exports.lockLottery = async (req, res) => {
     return;
   }
   assignment.state = 1;
-  assignment.save();
+  await assignment.save();
   res.send(assignment);
 };
 
@@ -247,7 +247,7 @@ exports.unlockLottery = async (req, res) => {
     return;
   }
   assignment.state = 0;
-  assignment.save();
+  await assignment.save();
   res.send(assignment);
 };
 
