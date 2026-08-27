@@ -9,6 +9,12 @@ export default $config({
     };
   },
   async run() {
+    // Only the production stage claims the real domains. Without this guard a
+    // plain `sst deploy` silently takes carousel.code4real.org over for whoever
+    // ran it, and every other stage then fails on the duplicate CloudFront
+    // alias. Non-production stages use SST's generated URLs instead.
+    const isProduction = $app.stage === "production";
+
     // Secrets
     const databaseUrl = new sst.Secret("DatabaseUrl");
     const jwtSecret = new sst.Secret("JwtSecret");
@@ -18,7 +24,7 @@ export default $config({
 
     // API
     const api = new sst.aws.ApiGatewayV2("CarouselApi", {
-      domain: "api.code4real.org",
+      domain: isProduction ? "api.code4real.org" : undefined,
     });
 
     const functionProps = {
@@ -63,7 +69,7 @@ export default $config({
         command: "eval $(fnm env) && fnm use 22 && npm run build",
         output: "dist",
       },
-      domain: "carousel.code4real.org",
+      domain: isProduction ? "carousel.code4real.org" : undefined,
       dev: {
         command: "eval $(fnm env) && fnm use 22 && npm run dev",
         url: "http://localhost:8081",
