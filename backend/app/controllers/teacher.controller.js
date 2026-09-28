@@ -8,6 +8,7 @@ const Lottery = db.lottery;
 const Poas = db.poas;
 const addrs = require("email-addresses");
 const common = require("../util/common.js")
+const sharing = require("./assignment_teachers.controller");
 
 const Op = db.Sequelize.Op;
 
@@ -63,6 +64,14 @@ exports.deleteOne = async (req, res) => {
         .send({ message: "That account is not a teacher." });
     }
 
+    // Removing the account would orphan shared assignments and strip students
+    // of their sections, so it waits until neither applies.
+    const blocker = await sharing.removalBlocker(user);
+    if (blocker) {
+      return res.status(409).send({ message: blocker });
+    }
+
+    await sharing.releaseTeacher(user);
     await user.destroy();
     res.send({ id: id });
   } catch(err) {
@@ -79,11 +88,21 @@ exports.deleteAll = async (req, res) => {
 
   try {
     const role = await Role.findOne({ where: { name: 'teacher' } });
+    const teachers = await role.getUsers();
 
-    let teachers = await role.getUsers();
-    for (let  i = 0; i < teachers.length; i++) {
-      let teacher = teachers[i];
-      teacher.destroy();
+    // All or nothing: nobody is removed while any one of them is blocked.
+    for (const teacher of teachers) {
+      const blocker = await sharing.removalBlocker(teacher);
+      if (blocker) {
+        return res.status(409).send({
+          message: `No teachers were removed. ${blocker}`
+        });
+      }
+    }
+
+    for (const teacher of teachers) {
+      await sharing.releaseTeacher(teacher);
+      await teacher.destroy();
     }
     res.send(null);
   } catch(err) {

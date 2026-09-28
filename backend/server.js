@@ -78,7 +78,8 @@ async function initial() {
     description: "Choose 3-5 individuals who have had significant impact on the United States, who you would be interested in researching and writing about. No two students currently enrolled in APENG will focus on the same Person of American Significance.",
     minEntries: 3,
     maxEntries: 5,
-    state: 0  // default: open
+    state: 0,  // default: open
+    ownerId: 2
   });
   await assignment.addAssigner([2]);
   await assignment.addAssigner([3]);

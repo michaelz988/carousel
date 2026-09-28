@@ -62,6 +62,27 @@ class TeacherDataService {
     return http.get(`/teacher/lottery?assignment=${assignmentId}`);
   }
 
+  // Sharing an assignment. `delete(id)` above deletes it (owner only).
+  getAssignmentTeachers(assignmentId) {
+    return http.get(`/teacher/assignments/${assignmentId}/teachers`);
+  }
+
+  getColleagues(assignmentId) {
+    return http.get(`/teacher/assignments/${assignmentId}/colleagues`);
+  }
+
+  addToAssignment(assignmentId, userId) {
+    return http.post(`/teacher/assignments/${assignmentId}/teachers`, { userId });
+  }
+
+  removeFromAssignment(assignmentId, userId) {
+    return http.delete(`/teacher/assignments/${assignmentId}/teachers/${userId}`);
+  }
+
+  transferOwnership(assignmentId, userId) {
+    return http.put(`/teacher/assignments/${assignmentId}/owner`, { userId });
+  }
+
 }
 
 export default new TeacherDataService();

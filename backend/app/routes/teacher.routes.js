@@ -2,6 +2,7 @@ const express = require("express");
 const { authJwt } = require("../middleware");
 const controller = require("../controllers/teacher.controller");
 const student = require("../controllers/student.controller");
+const sharing = require("../controllers/assignment_teachers.controller");
 
 module.exports = function(app) {
   app.use(function(req, res, next) {
@@ -19,6 +20,14 @@ module.exports = function(app) {
 
   // Retrieve a single Assignment with id
   router.get("/assignments/:id", controller.findOneAssignment);
+
+  // Sharing an assignment between teachers; see assignment_teachers.controller.
+  router.delete("/assignments/:id", sharing.destroy);
+  router.get("/assignments/:id/teachers", sharing.list);
+  router.post("/assignments/:id/teachers", sharing.add);
+  router.delete("/assignments/:id/teachers/:userId", sharing.remove);
+  router.get("/assignments/:id/colleagues", sharing.colleagues);
+  router.put("/assignments/:id/owner", sharing.transfer);
 
   // Lock further lottery entry
   router.post("/lottery/lock", controller.lockLottery);

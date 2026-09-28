@@ -80,7 +80,8 @@ async function confirmRemoval() {
     }
   } catch (e) {
     console.log(e)
-    notify('Could not remove the teacher.')
+    // A 409 explains why (the interceptor shows it); don't bury it.
+    if (e.response?.status !== 409) notify('Could not remove the teacher.')
   } finally {
     working.value = false
     pending.value = null

@@ -27,7 +27,8 @@ exports.create = async (req, res) => {
       minEntries: minEntries,
       maxEntries: maxEntries,
       dueDate: req.body.dueDate || null,
-      state: 0
+      state: 0,
+      ownerId: req.userId
     });
 
     // Link the creating teacher. GET /teacher/assignments resolves through

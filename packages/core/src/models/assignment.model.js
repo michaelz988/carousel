@@ -23,6 +23,12 @@ module.exports = (sequelize, Sequelize) => {
     },
     state: {
       type: Sequelize.INTEGER
+    },
+    // The teacher who can share, transfer and delete this assignment. Always
+    // also one of its teachers (a row in user_assignments). Not to be confused
+    // with user_assignments.owner, which records 'teacher' or 'student'.
+    ownerId: {
+      type: Sequelize.INTEGER
     }
   });
 

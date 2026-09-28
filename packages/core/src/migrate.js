@@ -14,6 +14,16 @@ async function migrate() {
   await db.sequelize.sync();
   console.log("Database synced.");
 
+  // assignments.ownerId arrived after the first deploy. sync() creates missing
+  // tables but never alters existing ones, so add the column explicitly --
+  // before anything below queries the assignments table.
+  const queryInterface = db.sequelize.getQueryInterface();
+  const assignmentColumns = await queryInterface.describeTable("assignments");
+  if (!assignmentColumns.ownerId) {
+    await queryInterface.addColumn("assignments", "ownerId", { type: db.Sequelize.INTEGER });
+    console.log("Added assignments.ownerId.");
+  }
+
   // Seed roles
   for (const [id, name] of [[1, "admin"], [2, "teacher"], [3, "student"]]) {
     await Role.findOrCreate({ where: { id }, defaults: { id, name } });
@@ -75,6 +85,24 @@ async function migrate() {
   } catch (e) {
     // Already associated
   }
+
+  // Every assignment needs an owner: admins cannot assign one, so an ownerless
+  // assignment could never be shared, handed over or deleted. The earliest
+  // teacher on each becomes its owner.
+  const ownerless = await Assignment.findAll({ where: { ownerId: null } });
+  let ownersSet = 0;
+  for (const a of ownerless) {
+    const first = await db.user_assignments.findOne({
+      where: { assignmentId: a.assignmentId, owner: "teacher" },
+      order: [["id", "ASC"]]
+    });
+    if (first) {
+      a.ownerId = first.teacherId;
+      await a.save();
+      ownersSet++;
+    }
+  }
+  console.log(`Owners set on ${ownersSet} assignment(s).`);
 
   // Seed sentinel POAS entries
   await Poas.findOrCreate({
