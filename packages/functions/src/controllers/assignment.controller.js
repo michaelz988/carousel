@@ -1,5 +1,6 @@
 const db = require("@carousel/core");
 const Assignment = db.assignment;
+const UserAssignment = db.user_assignments;
 const Op = db.Sequelize.Op;
 
 exports.create = async (req, res) => {
@@ -51,44 +52,32 @@ exports.findOne = (req, res) => {
     });
 };
 
-exports.update = (req, res) => {
-  const id = req.params.id;
-  Assignment.update(req.body, { where: { assignmentId: id } })
-    .then(num => {
-      if (num == 1) {
-        res.send({ message: "Assignment was updated successfully." });
-      } else {
-        res.send({ message: `Cannot update Assignment with id=${id}. Maybe Assignment was not found or req.body is empty!` });
-      }
-    })
-    .catch(err => {
-      res.status(500).send({ message: "Error updating Assignment with id=" + id });
-    });
-};
+// Only teachers on the assignment may edit it, and only its descriptive
+// fields. `state` moves through the lock/unlock/run endpoints and `ownerId`
+// through the sharing endpoints -- the edit form posts the whole record back,
+// so passing req.body through would let a stale form rewind the lottery or
+// let any member take ownership.
+const EDITABLE = ["title", "description", "minEntries", "maxEntries", "dueDate"];
 
-exports.delete = (req, res) => {
-  const id = req.params.id;
-  Assignment.destroy({ where: { id: id } })
-    .then(num => {
-      if (num == 1) {
-        res.send({ message: "Assignment was deleted successfully!" });
-      } else {
-        res.send({ message: `Cannot delete Assignment with id=${id}. Maybe Assignment was not found!` });
-      }
-    })
-    .catch(err => {
-      res.status(500).send({ message: "Could not delete Assignment with id=" + id });
-    });
-};
+exports.update = async (req, res) => {
+  const id = parseInt(req.params.id, 10);
 
-exports.deleteAll = (req, res) => {
-  Assignment.destroy({ where: {}, truncate: false })
-    .then(nums => {
-      res.send({ message: `${nums} Assignments were deleted successfully!` });
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: err.message || "Some error occurred while removing all Assignments."
-      });
+  try {
+    const membership = await UserAssignment.findOne({
+      where: { assignmentId: id, teacherId: req.userId, owner: "teacher" }
     });
+    if (!membership) {
+      return res.status(404).send({ message: "Assignment not found." });
+    }
+
+    const changes = {};
+    for (const key of EDITABLE) {
+      if (key in req.body) changes[key] = req.body[key];
+    }
+
+    await Assignment.update(changes, { where: { assignmentId: id } });
+    res.send({ message: "Assignment was updated successfully." });
+  } catch (err) {
+    res.status(500).send({ message: "Error updating Assignment with id=" + id });
+  }
 };
