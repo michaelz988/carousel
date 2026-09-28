@@ -10,14 +10,8 @@ module.exports = app => {
   // Find one assignement with id
   router.get("/:id", assignments.findOne);
 
-  // Update a Assignment with id
-  router.put("/:id", assignments.update);
-
-  // Delete a Assignment with id
-  router.delete("/:id", assignments.delete);
-
-  // Delete all Assignments
-  router.delete("/", assignments.deleteAll);
+  // Teachers on the assignment only; see assignments.update.
+  router.put("/:id", authJwt.isTeacher, assignments.update);
 
    app.use('/api/assignments', authJwt.verifyToken, authJwt.isTeacherOrStudent, router);
 };

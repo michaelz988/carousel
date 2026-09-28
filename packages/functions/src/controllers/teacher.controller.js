@@ -7,6 +7,7 @@ const Lottery = db.lottery;
 const Poas = db.poas;
 const addrs = require("email-addresses");
 const common = require("@carousel/core/src/util/common")
+const sharing = require("./assignment_teachers.controller");
 
 const Op = db.Sequelize.Op;
 
@@ -60,6 +61,14 @@ exports.deleteOne = async (req, res) => {
         .send({ message: "That account is not a teacher." });
     }
 
+    // Removing the account would orphan shared assignments and strip students
+    // of their sections, so it waits until neither applies.
+    const blocker = await sharing.removalBlocker(user);
+    if (blocker) {
+      return res.status(409).send({ message: blocker });
+    }
+
+    await sharing.releaseTeacher(user);
     await user.destroy();
     res.send({ id: id });
   } catch(err) {
@@ -76,10 +85,21 @@ exports.deleteAll = async (req, res) => {
 
   try {
     const role = await Role.findOne({ where: { name: 'teacher' } });
-    let teachers = await role.getUsers();
-    for (let i = 0; i < teachers.length; i++) {
-      let teacher = teachers[i];
-      teacher.destroy();
+    const teachers = await role.getUsers();
+
+    // All or nothing: nobody is removed while any one of them is blocked.
+    for (const teacher of teachers) {
+      const blocker = await sharing.removalBlocker(teacher);
+      if (blocker) {
+        return res.status(409).send({
+          message: `No teachers were removed. ${blocker}`
+        });
+      }
+    }
+
+    for (const teacher of teachers) {
+      await sharing.releaseTeacher(teacher);
+      await teacher.destroy();
     }
     res.send(null);
   } catch(err) {
@@ -95,7 +115,7 @@ exports.create = async (req, res) => {
 
   try {
     let email = addrs.parseOneAddress(req.body.email);
-    [ user, created ] = await User.findOrCreate({
+    const [ user, created ] = await User.findOrCreate({
       where: { email: email.address },
       defaults: {
         username: email.local,
@@ -103,14 +123,26 @@ exports.create = async (req, res) => {
       }
     });
 
+    // A new teacher starts with no assignments: they create their own, or
+    // an owner shares one with them.
     if (created) {
-      console.log("Setting role for teacher");
-      user.setRoles([2]);
-      user.setAssignment([1]);
-      res.send(user);
-    } else {
-      res.send(null);
+      await user.setRoles([2]);
+      return res.send(user);
     }
+
+    // An existing account is promoted rather than ignored -- this is how a
+    // student, or an account that ended up with no role, becomes a teacher.
+    const roles = (await user.getRoles()).map(r => r.name);
+    if (roles.includes("teacher")) {
+      return res.send(null);  // already a teacher
+    }
+    if (roles.includes("admin")) {
+      return res.status(409).send({
+        message: "That account is an admin and cannot also be a teacher."
+      });
+    }
+    await user.setRoles([2]);
+    res.send(user);
   } catch(err) {
     res.status(500).send({
       message: err.message || "Some error occurred while creating a teacher."

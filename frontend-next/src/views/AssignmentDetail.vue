@@ -1,11 +1,12 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import {
   TicketIcon,
   ListBulletIcon,
   UsersIcon,
   PencilSquareIcon,
+  AcademicCapIcon,
 } from '@heroicons/vue/24/outline'
 import AssignmentDataService from '@/services/AssignmentDataService'
 import LotteryDataService from '@/services/LotteryDataService'
@@ -22,8 +23,10 @@ import PoasList from '@/components/PoasList.vue'
 import AssignmentModal from '@/components/AssignmentModal.vue'
 import StudentsList from '@/components/StudentsList.vue'
 import LotteryAdmin from '@/components/LotteryAdmin.vue'
+import AssignmentTeachers from '@/components/AssignmentTeachers.vue'
 
 const route = useRoute()
+const router = useRouter()
 const auth = useAuthStore()
 const assignments = useAssignmentsStore()
 
@@ -39,6 +42,7 @@ const showPoas = ref(false)
 const showEdit = ref(false)
 const showStudents = ref(false)
 const showAdmin = ref(false)
+const showTeachers = ref(false)
 
 const status = computed(() =>
   assignment.value ? lotteryState(assignment.value.state) : null,
@@ -89,6 +93,13 @@ function refreshStudent() {
 function closeAdmin() {
   showAdmin.value = false
   load(route.params.id)
+}
+
+// The teacher left or deleted this assignment, so it is no longer theirs.
+async function leftAssignment() {
+  showTeachers.value = false
+  await assignments.load({ force: true })
+  router.push('/home')
 }
 </script>
 
@@ -159,6 +170,10 @@ function closeAdmin() {
             <UsersIcon class="h-4 w-4" aria-hidden="true" />
             Students
           </AppButton>
+          <AppButton variant="secondary" @click="showTeachers = true">
+            <AcademicCapIcon class="h-4 w-4" aria-hidden="true" />
+            Teachers
+          </AppButton>
           <AppButton variant="secondary" @click="showEdit = true">
             <PencilSquareIcon class="h-4 w-4" aria-hidden="true" />
             Edit
@@ -183,5 +198,11 @@ function closeAdmin() {
     <AssignmentModal v-if="showEdit" @close="showEdit = false; load(route.params.id)" />
     <StudentsList v-if="showStudents" @close="showStudents = false" />
     <LotteryAdmin v-if="showAdmin" @close="closeAdmin" />
+    <AssignmentTeachers
+      v-if="showTeachers"
+      :assignment="assignment"
+      @close="showTeachers = false"
+      @gone="leftAssignment"
+    />
   </div>
 </template>

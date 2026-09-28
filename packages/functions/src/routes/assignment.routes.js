@@ -7,9 +7,8 @@ module.exports = app => {
   // assignments), so creation is gated separately.
   router.post("/", authJwt.isTeacher, assignments.create);
   router.get("/:id", assignments.findOne);
-  router.put("/:id", assignments.update);
-  router.delete("/:id", assignments.delete);
-  router.delete("/", assignments.deleteAll);
+  // Teachers on the assignment only; see assignments.update.
+  router.put("/:id", authJwt.isTeacher, assignments.update);
 
   app.use('/api/assignments', authJwt.verifyToken, authJwt.isTeacherOrStudent, router);
 };

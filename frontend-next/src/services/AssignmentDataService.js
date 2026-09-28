@@ -17,14 +17,6 @@ class StudentAssignmentDataService {
     return http.put(`/assignments/${id}`, data);
   }
 
-  delete(id) {
-    return http.delete(`/assignments/${id}`);
-  }
-
-  deleteAll() {
-    return http.delete(`/assignments`);
-  }
-
   findByTitle(title) {
     return http.get(`/assignments?title=${title}`);
   }
