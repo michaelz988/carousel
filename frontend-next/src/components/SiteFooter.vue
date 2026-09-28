@@ -10,7 +10,7 @@ import logoUrl from '@/assets/logo.png'
       <p class="flex items-center gap-2">
         <span>Made in open source by</span>
         <a
-          href="https://code4real.org/"
+          href="https://www.code4real.org/"
           target="_blank"
           rel="noopener noreferrer"
           class="inline-flex items-center gap-1.5 font-semibold text-brand-700 underline-offset-4 hover:underline"
