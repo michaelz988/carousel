@@ -101,7 +101,7 @@ exports.create = async (req, res) => {
 
   try {
     let email = addrs.parseOneAddress(req.body.email);
-    [ user, created ] = await User.findOrCreate({
+    const [ user, created ] = await User.findOrCreate({
       where: { email: email.address },
       defaults: {
         username: email.local,
@@ -109,15 +109,26 @@ exports.create = async (req, res) => {
       }
     });
 
+    // A new teacher starts with no assignments: they create their own, or
+    // an owner shares one with them.
     if (created) {
-      console.log("Setting role for teacher");
-      user.setRoles([2]);
-      // ToDo: Hard code to the only assignment
-      user.setAssignment([1]);
-      res.send(user);
-    } else {
-      res.send(null);
+      await user.setRoles([2]);
+      return res.send(user);
     }
+
+    // An existing account is promoted rather than ignored -- this is how a
+    // student, or an account that ended up with no role, becomes a teacher.
+    const roles = (await user.getRoles()).map(r => r.name);
+    if (roles.includes("teacher")) {
+      return res.send(null);  // already a teacher
+    }
+    if (roles.includes("admin")) {
+      return res.status(409).send({
+        message: "That account is an admin and cannot also be a teacher."
+      });
+    }
+    await user.setRoles([2]);
+    res.send(user);
   } catch(err) {
     res.status(500).send({
       message:
