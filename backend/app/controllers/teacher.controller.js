@@ -22,14 +22,13 @@ exports.findAll = async (req, res) => {
   const schoolId = parseInt(req.query.school);
 
   try {
-    let teachers = await User.findAll();
-    for (let i = 0; i < teachers.length; i++) {
-      let teacher = teachers[i];
-      let isTeacher= await teacher.hasRole(2);
-      if (!isTeacher) {
-        teachers.splice(i, 1);
-      }
-    }
+    // Select teachers through the role rather than filtering every user, and
+    // return only what the admin list needs -- never password or gid.
+    const role = await Role.findOne({ where: { name: 'teacher' } });
+    const teachers = await role.getUsers({
+      attributes: ['userId', 'firstName', 'lastName', 'username', 'email'],
+      joinTableAttributes: []
+    });
     res.send(teachers);
   } catch(err) {
     res.status(500).send({
