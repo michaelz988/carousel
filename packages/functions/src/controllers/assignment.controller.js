@@ -44,6 +44,15 @@ exports.create = async (req, res) => {
   }
 };
 
+// Admin-only: every assignment, whoever teaches it.
+exports.findAll = async (req, res) => {
+  try {
+    res.send(await Assignment.findAll({ order: [["assignmentId", "ASC"]] }));
+  } catch (err) {
+    res.status(500).send({ message: "Error retrieving assignments." });
+  }
+};
+
 exports.findOne = (req, res) => {
   const id = parseInt(req.params.id);
   Assignment.findByPk(id)
