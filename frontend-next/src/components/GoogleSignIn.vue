@@ -8,6 +8,7 @@ const props = defineProps({ width: { type: Number, default: 280 } })
 
 const auth = useAuthStore()
 const buttonEl = ref(null)
+const error = ref('')
 
 const CLIENT_ID =
   '921798240468-7ef6ep21omf9pv15m4ilpa07patqjeio.apps.googleusercontent.com'
@@ -15,8 +16,13 @@ const CLIENT_ID =
 // --- Google Identity Services -------------------------------------------
 // Unchanged: same client ID, same script URL, same initialize/renderButton
 // calls, same credential handler.
-function handleCredentialResponse(googleUser) {
-  auth.glogin(googleUser)
+async function handleCredentialResponse(googleUser) {
+  error.value = ''
+  try {
+    await auth.glogin(googleUser)
+  } catch (err) {
+    error.value = err.message
+  }
 }
 
 function initializeGoogleSignIn() {
@@ -71,6 +77,14 @@ onMounted(() => {
 
     <!-- Google renders its button into this element -->
     <div ref="buttonEl" class="mt-6 flex justify-center" />
+
+    <p
+      v-if="error"
+      role="alert"
+      class="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
+    >
+      {{ error }}
+    </p>
 
     <p class="mt-5 text-center text-xs leading-relaxed text-ink-400">
       If sign-in is refused, your account has not been added to Carousel yet.

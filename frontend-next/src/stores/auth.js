@@ -39,10 +39,11 @@ export const useAuthStore = defineStore('auth', {
      * store the returned user, then route by role.
      */
     async glogin(gUser) {
+      let gmail
       try {
         const token = gUser.credential
         const decoded = jwtDecode(token)
-        const gmail = decoded.email
+        gmail = decoded.email
 
         const response = await AuthService.signin({
           email: gmail,
@@ -61,7 +62,14 @@ export const useAuthStore = defineStore('auth', {
         // Everyone lands on the same home; the sidebar adapts to the role.
         router.push(this.role === 'ROLE_ADMIN' ? '/admin' : '/home')
       } catch (err) {
-        console.log(err)
+        // Sign-in uses the plain client, which shows no toast, so the caller
+        // must display this message.
+        if (err.response?.status === 404) {
+          throw new Error(
+            `${gmail} has not been added to Carousel. Ask your teacher or administrator to add it.`,
+          )
+        }
+        throw new Error('Sign-in failed. Please try again.')
       }
     },
 
