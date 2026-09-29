@@ -63,6 +63,11 @@ export default $config({
     // The fnm prefix stays: Vite 8 needs Node 20+, and the shell can be left
     // on Node 16 by frontend/.node-version. The openssl-legacy-provider flag
     // is gone — that was a webpack 4 workaround the old app needed.
+    //
+    // The dev command uses `fnm exec` rather than the eval/&& prefix: `sst dev`
+    // runs it as a program, not through a shell, so shell syntax there makes
+    // the site exit immediately without an error. It picks the Node version
+    // from frontend-next/.node-version.
     const site = new sst.aws.StaticSite("CarouselSite", {
       path: "frontend-next",
       build: {
@@ -71,7 +76,7 @@ export default $config({
       },
       domain: isProduction ? "carousel.code4real.org" : undefined,
       dev: {
-        command: "eval $(fnm env) && fnm use 22 && npm run dev",
+        command: "fnm exec npm run dev",
         url: "http://localhost:8081",
       },
       environment: {
