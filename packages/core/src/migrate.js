@@ -42,13 +42,33 @@ async function migrate() {
   const adminRoles = await user.getRoles();
   if (adminRoles.length === 0) await user.setRoles([1]);
 
+  // The first seed teacher was florence.y.zhao@gmail.com, whose Google account
+  // can no longer be signed in to. Rename that row rather than adding a new one,
+  // so user 2 keeps its assignments, ownership and students. Sign-in fills the
+  // name and Google id back in from the new account.
+  const replaced = await User.findOne({ where: { email: "florence.y.zhao@gmail.com" } });
+  if (replaced) {
+    const taken = await User.findOne({ where: { email: "brookvaleboy@gmail.com" } });
+    if (taken) {
+      console.warn(`Not renaming user ${replaced.userId}: brookvaleboy@gmail.com is already user ${taken.userId}.`);
+    } else {
+      replaced.email = "brookvaleboy@gmail.com";
+      replaced.username = "brookvaleboy";
+      replaced.gid = null;
+      replaced.firstName = null;
+      replaced.lastName = null;
+      await replaced.save();
+      console.log(`Renamed user ${replaced.userId} to brookvaleboy@gmail.com.`);
+    }
+  }
+
   // Seed teacher accounts
   [user] = await User.findOrCreate({
-    where: { email: "florence.y.zhao@gmail.com" },
+    where: { email: "brookvaleboy@gmail.com" },
     defaults: {
       userId: 2,
-      username: "florence.y.zhao",
-      email: "florence.y.zhao@gmail.com",
+      username: "brookvaleboy",
+      email: "brookvaleboy@gmail.com",
     }
   });
   let roles = await user.getRoles();
