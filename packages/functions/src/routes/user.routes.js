@@ -9,8 +9,4 @@ module.exports = function(app) {
 
   app.get("/api/student", [authJwt.verifyToken, authJwt.isStudent], controller.studentBoard);
   app.get("/api/admin", [authJwt.verifyToken, authJwt.isAdmin], controller.adminBoard);
-
-  var router = require("express").Router();
-  router.post("/", controller.create);
-  app.use('/api/user', router);
 }

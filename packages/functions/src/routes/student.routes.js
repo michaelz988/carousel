@@ -15,5 +15,4 @@ module.exports = function(app) {
 
   app.post("/api/student/signup", [authJwt.verifyToken, authJwt.isTeacher], controller.signup);
   app.delete("/api/student", [authJwt.verifyToken, authJwt.isTeacher], controller.deleteAll);
-  app.post("/api/student/signin", controller.signin);
 };
