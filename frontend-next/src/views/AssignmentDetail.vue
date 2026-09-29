@@ -9,6 +9,7 @@ import {
   AcademicCapIcon,
 } from '@heroicons/vue/24/outline'
 import AssignmentDataService from '@/services/AssignmentDataService'
+import AdminDataService from '@/services/AdminDataService'
 import LotteryDataService from '@/services/LotteryDataService'
 import { useAuthStore } from '@/stores/auth'
 import { useAssignmentsStore } from '@/stores/assignments'
@@ -31,6 +32,9 @@ const auth = useAuthStore()
 const assignments = useAssignmentsStore()
 
 const isTeacher = computed(() => auth.role === 'ROLE_TEACHER')
+// Admins can look at any assignment but change nothing.
+const isAdmin = computed(() => auth.role === 'ROLE_ADMIN')
+const isStudent = computed(() => !isTeacher.value && !isAdmin.value)
 
 const assignment = ref(null)
 const lottery = ref(null)
@@ -58,7 +62,7 @@ async function load(id) {
   lottery.value = null
 
   try {
-    const response = await AssignmentDataService.get(id)
+    const response = await (isAdmin.value ? AdminDataService : AssignmentDataService).get(id)
     if (!response.data?.assignmentId) {
       notFound.value = true
       return
@@ -69,7 +73,7 @@ async function load(id) {
     auth.updateActiveAssignment(response.data)
     assignments.upsert(response.data)
 
-    if (!isTeacher.value) {
+    if (isStudent.value) {
       const result = await LotteryDataService.getAll(id)
       lottery.value = result.data
     }
@@ -87,7 +91,7 @@ onMounted(() => load(route.params.id))
 
 function refreshStudent() {
   showLottery.value = false
-  if (!isTeacher.value) load(route.params.id)
+  if (isStudent.value) load(route.params.id)
 }
 
 function closeAdmin() {
@@ -150,14 +154,14 @@ async function leftAssignment() {
 
       <!-- Student: their own status, progress and result -->
       <StudentLotteryPanel
-        v-if="!isTeacher"
+        v-if="isStudent"
         :assignment="assignment"
         :lottery="lottery"
       />
 
-      <!-- Teacher: where the lottery stands -->
+      <!-- Teacher and admin: where the lottery stands -->
       <div v-else class="mt-5 border-t border-ink-100 pt-5">
-        <LotteryStatus :state="assignment.state" role="teacher" />
+        <LotteryStatus :state="assignment.state" :role="isAdmin ? 'admin' : 'teacher'" />
       </div>
 
       <div class="mt-6 flex flex-wrap gap-2 border-t border-ink-100 pt-5">
@@ -177,6 +181,17 @@ async function leftAssignment() {
           <AppButton variant="secondary" @click="showEdit = true">
             <PencilSquareIcon class="h-4 w-4" aria-hidden="true" />
             Edit
+          </AppButton>
+        </template>
+
+        <template v-else-if="isAdmin">
+          <AppButton variant="primary" @click="showAdmin = true">
+            <TicketIcon class="h-4 w-4" aria-hidden="true" />
+            Lottery results
+          </AppButton>
+          <AppButton variant="secondary" @click="showTeachers = true">
+            <AcademicCapIcon class="h-4 w-4" aria-hidden="true" />
+            Teachers
           </AppButton>
         </template>
 

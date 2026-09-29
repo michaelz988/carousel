@@ -13,14 +13,14 @@ import {
  */
 const props = defineProps({
   state: { type: Number, default: 0 },
-  role: { type: String, default: 'student' }, // student | teacher
+  role: { type: String, default: 'student' }, // student | teacher | admin
   compact: { type: Boolean, default: false },
 })
 
 const guidance = computed(() =>
-  props.role === 'teacher'
-    ? teacherGuidance(props.state)
-    : studentGuidance(props.state),
+  props.role === 'student'
+    ? studentGuidance(props.state)
+    : teacherGuidance(props.state),
 )
 </script>
 
@@ -70,7 +70,8 @@ const guidance = computed(() =>
 
     <div v-if="guidance.headline" class="mt-3">
       <p class="text-sm font-semibold text-ink-900">{{ guidance.headline }}</p>
-      <p class="mt-0.5 text-sm leading-relaxed text-ink-500">
+      <!-- The detail tells a teacher what to do next; admins only look -->
+      <p v-if="role !== 'admin'" class="mt-0.5 text-sm leading-relaxed text-ink-500">
         {{ guidance.detail }}
       </p>
     </div>

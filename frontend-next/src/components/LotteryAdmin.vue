@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { ArrowPathIcon, ClipboardIcon } from '@heroicons/vue/24/outline'
 import AssignmentDataService from '@/services/AssignmentDataService'
 import TeacherDataService from '@/services/TeacherDataService'
+import AdminDataService from '@/services/AdminDataService'
 import { useAuthStore } from '@/stores/auth'
 import AppModal from '@/components/AppModal.vue'
 import AppButton from '@/components/AppButton.vue'
@@ -16,6 +17,8 @@ import { COMPLETED, submissionProgress } from '@/lib/lottery'
 
 const emit = defineEmits(['close'])
 const auth = useAuthStore()
+// Admins get a read-only view: the result table, without lottery actions.
+const isAdmin = computed(() => auth.role === 'ROLE_ADMIN')
 
 const fields = [
   'index',
@@ -84,7 +87,8 @@ const assignedCount = computed(
 )
 
 function retrieveLotteryResult(assignmentId) {
-  return TeacherDataService.showLottery(assignmentId)
+  return (isAdmin.value ? AdminDataService : TeacherDataService)
+    .showLottery(assignmentId)
     .then((response) => {
       students.value = response.data
       detailShowing.value = false
@@ -198,7 +202,7 @@ async function copyResults() {
 
 onMounted(async () => {
   try {
-    const response = await AssignmentDataService.get(
+    const response = await (isAdmin.value ? AdminDataService : AssignmentDataService).get(
       auth.activeAssignment.assignmentId,
     )
     auth.updateActiveAssignment(response.data)
@@ -210,12 +214,16 @@ onMounted(async () => {
 </script>
 
 <template>
-  <AppModal title="Lottery administration" size="xl" @close="emit('close')">
+  <AppModal
+    :title="isAdmin ? 'Lottery results' : 'Lottery administration'"
+    size="xl"
+    @close="emit('close')"
+  >
     <!-- Shared lifecycle rail + what this state means for a teacher -->
-    <LotteryStatus :state="state" role="teacher" class="mb-5" />
+    <LotteryStatus :state="state" :role="isAdmin ? 'admin' : 'teacher'" class="mb-5" />
 
     <LotteryPreflight
-      v-if="state !== COMPLETED"
+      v-if="!isAdmin && state !== COMPLETED"
       class="mb-5"
       :students="students"
       :min-entries="auth.activeAssignment.minEntries"
@@ -224,7 +232,9 @@ onMounted(async () => {
 
     <!-- State actions -->
     <div class="mb-5 flex flex-wrap items-center gap-2">
-      <template v-if="state === 0">
+      <!-- Admins only look: none of the lock/run/reopen actions -->
+      <template v-if="isAdmin" />
+      <template v-else-if="state === 0">
         <AppButton @click="requestLock">Lock lottery entries</AppButton>
       </template>
       <template v-else-if="state === 1">
@@ -278,7 +288,7 @@ onMounted(async () => {
       :busy="isBusy"
       :filter="filter"
       :filter-on="['teacher']"
-      selectable
+      :selectable="!isAdmin"
       empty-text="No students are registered for this assignment."
       @row-selected="onStudentSelected"
     >

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import AssignmentDataService from '@/services/AssignmentDataService'
 import TeacherDataService from '@/services/TeacherDataService'
+import AdminDataService from '@/services/AdminDataService'
 import { useAuthStore } from '@/stores/auth'
 
 /**
@@ -8,7 +9,8 @@ import { useAuthStore } from '@/stores/auth'
  * overview and the assignment screen — so selecting one in the sidebar does
  * not trigger a second fetch.
  *
- * Teachers and students read from different endpoints but get the same shape.
+ * Teachers, students and admins read from different endpoints but get the
+ * same shape. Admins see every assignment.
  */
 export const useAssignmentsStore = defineStore('assignments', {
   state: () => ({
@@ -32,7 +34,11 @@ export const useAssignmentsStore = defineStore('assignments', {
       this.loading = true
       try {
         const service =
-          auth.role === 'ROLE_TEACHER' ? TeacherDataService : AssignmentDataService
+          auth.role === 'ROLE_TEACHER'
+            ? TeacherDataService
+            : auth.role === 'ROLE_ADMIN'
+              ? AdminDataService
+              : AssignmentDataService
         const response = await service.getAll()
         this.items = Array.isArray(response.data) ? response.data : []
         this.loaded = true

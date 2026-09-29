@@ -105,7 +105,9 @@ onMounted(() => assignments.load())
         {{
           isTeacher
             ? 'No assignments yet. Use + in the header to create one.'
-            : 'Nothing assigned to you yet.'
+            : isAdmin
+              ? 'No assignments yet.'
+              : 'Nothing assigned to you yet.'
         }}
       </p>
     </div>

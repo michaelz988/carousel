@@ -14,6 +14,7 @@ const auth = useAuthStore()
 const assignments = useAssignmentsStore()
 
 const isTeacher = computed(() => auth.role === 'ROLE_TEACHER')
+const isAdmin = computed(() => auth.role === 'ROLE_ADMIN')
 
 const firstName = computed(() => displayName(auth.activeUser).split(' ')[0])
 
@@ -37,7 +38,9 @@ onMounted(() => assignments.load())
         {{
           isTeacher
             ? 'Pick an assignment from the sidebar to manage its roster and lottery.'
-            : 'Pick an assignment from the sidebar to submit or review your choices.'
+            : isAdmin
+              ? 'Pick an assignment from the sidebar to see its teachers and lottery results.'
+              : 'Pick an assignment from the sidebar to submit or review your choices.'
         }}
       </p>
     </header>
@@ -98,11 +101,13 @@ onMounted(() => assignments.load())
 
     <EmptyState
       v-else
-      :title="isTeacher ? 'No assignments yet' : 'Nothing assigned to you yet'"
+      :title="isTeacher || isAdmin ? 'No assignments yet' : 'Nothing assigned to you yet'"
       :description="
         isTeacher
           ? 'Create an assignment, import your roster, and students can start submitting choices.'
-          : 'When your teacher opens an assignment it will appear here and in the sidebar.'
+          : isAdmin
+            ? 'Assignments your teachers create will appear here and in the sidebar.'
+            : 'When your teacher opens an assignment it will appear here and in the sidebar.'
       "
     >
       <AppButton v-if="isTeacher" @click="emit('create')">

@@ -8,6 +8,7 @@ import {
 } from '@headlessui/vue'
 import { TrashIcon } from '@heroicons/vue/24/outline'
 import TeacherDataService from '@/services/TeacherDataService'
+import AdminDataService from '@/services/AdminDataService'
 import { useAuthStore } from '@/stores/auth'
 import { displayName } from '@/lib/user'
 import { notify } from '@/lib/notify'
@@ -126,7 +127,10 @@ async function confirmPending() {
 
 async function load() {
   try {
-    const response = await TeacherDataService.getAssignmentTeachers(assignmentId.value)
+    // Admins are never members, so they read it through the admin endpoint and
+    // see no owner controls.
+    const service = auth.role === 'ROLE_ADMIN' ? AdminDataService : TeacherDataService
+    const response = await service.getAssignmentTeachers(assignmentId.value)
     teachers.value = response.data
     colleagues.value = isOwner.value
       ? (await TeacherDataService.getColleagues(assignmentId.value)).data

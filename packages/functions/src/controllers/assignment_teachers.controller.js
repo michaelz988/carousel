@@ -128,27 +128,43 @@ exports.releaseTeacher = async (user) => {
 };
 
 // GET /api/teacher/assignments/:id/teachers
+async function teachersOf(assignment) {
+  const memberships = await UserAssignment.findAll({
+    where: { assignmentId: assignment.assignmentId, owner: "teacher" },
+    include: [{ model: User, as: "Teacher", attributes: TEACHER_FIELDS }],
+    order: [["id", "ASC"]]
+  });
+
+  const teachers = [];
+  for (const m of memberships) {
+    if (!m.Teacher) continue;
+    teachers.push({
+      ...m.Teacher.get({ plain: true }),
+      isOwner: m.Teacher.userId === assignment.ownerId,
+      studentCount: await countStudents(m)
+    });
+  }
+  return teachers;
+}
+
 exports.list = async (req, res) => {
   try {
     const ctx = await load(req, res);
     if (!ctx) return;
+    res.send(await teachersOf(ctx.assignment));
+  } catch (err) {
+    res.status(500).send({ message: "Could not load the teachers on this assignment." });
+  }
+};
 
-    const memberships = await UserAssignment.findAll({
-      where: { assignmentId: ctx.assignment.assignmentId, owner: "teacher" },
-      include: [{ model: User, as: "Teacher", attributes: TEACHER_FIELDS }],
-      order: [["id", "ASC"]]
-    });
-
-    const teachers = [];
-    for (const m of memberships) {
-      if (!m.Teacher) continue;
-      teachers.push({
-        ...m.Teacher.get({ plain: true }),
-        isOwner: m.Teacher.userId === ctx.assignment.ownerId,
-        studentCount: await countStudents(m)
-      });
+// Admin-only and read-only: admins are not members, so skip load().
+exports.listForAdmin = async (req, res) => {
+  try {
+    const assignment = await Assignment.findByPk(parseInt(req.params.id, 10) || 0);
+    if (!assignment) {
+      return res.status(404).send({ message: "Assignment not found." });
     }
-    res.send(teachers);
+    res.send(await teachersOf(assignment));
   } catch (err) {
     res.status(500).send({ message: "Could not load the teachers on this assignment." });
   }
