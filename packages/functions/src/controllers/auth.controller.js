@@ -3,42 +3,9 @@ const db = require("@carousel/core");
 const User = db.user;
 const Role = db.role;
 
-const Op = db.Sequelize.Op;
-
 var jwt = require("jsonwebtoken");
-var bcrypt = require("bcryptjs");
 
 const JWT_SECRET = process.env.JWT_SECRET || "code4real-secret-key";
-
-exports.signup = (req, res) => {
-  User.create({
-    username: req.body.username,
-    email: req.body.email,
-    password: bcrypt.hashSync(req.body.password, 8)
-  })
-    .then(user => {
-      if (req.body.roles) {
-        Role.findAll({
-          where: {
-            name: {
-              [Op.or]: req.body.roles
-            }
-          }
-        }).then(roles => {
-          user.setRoles(roles).then(() => {
-            res.send({ message: "User was registered successfully!" });
-          });
-        });
-      } else {
-        user.setRoles([1]).then(() => {
-          res.send({ message: "User was registered successfully!" });
-        });
-      }
-    })
-    .catch(err => {
-      res.status(500).send({ message: err.message });
-    });
-};
 
 exports.signin = async (req, res) => {
   let id_token = req.body.credential;

@@ -32,5 +32,4 @@ module.exports = function(app) {
   app.use("/api/teacher", authJwt.verifyToken, authJwt.isTeacher, router);
 
   app.post("/api/teacher/signup", [authJwt.verifyToken, authJwt.isAdmin], controller.signup);
-  app.post("/api/teacher/signin", controller.signin);
 };

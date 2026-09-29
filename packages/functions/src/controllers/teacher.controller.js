@@ -11,10 +11,7 @@ const sharing = require("./assignment_teachers.controller");
 
 const Op = db.Sequelize.Op;
 
-var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
-
-const JWT_SECRET = process.env.JWT_SECRET || "code4real-secret-key";
 
 exports.findAll = async (req, res) => {
   const uid = req.userId;
@@ -316,31 +313,6 @@ exports.signup = (req, res) => {
           res.send({ message: "Teacher was registered successfully!" });
         });
       })
-    })
-    .catch(err => {
-      res.status(500).send({ message: err.message });
-    });
-};
-
-exports.signin = (req, res) => {
-  User.findOne({ where: { email: req.body.email } })
-    .then(user => {
-      if (!user) {
-        return res.status(404).send({ message: "User Not found." });
-      }
-
-      if (user.hasRoles(2)) {
-        var token = jwt.sign({ id: user.userId }, JWT_SECRET, {
-            expiresIn: 86400
-          });
-
-        res.status(200).send({
-          id: user.userId,
-          username: user.username,
-          email: user.email,
-          accessToken: token
-        });
-      }
     })
     .catch(err => {
       res.status(500).send({ message: err.message });
