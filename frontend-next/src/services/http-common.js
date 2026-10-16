@@ -43,9 +43,10 @@ http.interceptors.response.use(
       ) {
         router.push('/login')
       }
-    } else if (status === 409 && error.response.data?.message) {
-      // 409 carries a sentence written for the user -- why an action is not
-      // allowed yet (e.g. a teacher who still has students) -- so show it.
+    } else if ((status === 409 || status === 503) && error.response.data?.message) {
+      // These carry a sentence written for the user -- why an action is not
+      // allowed yet (409), or that a save could not reach Wikipedia and
+      // nothing was changed (503) -- so show it.
       notify(error.response.data.message)
     } else {
       notify('Request failed. Please try again.')
