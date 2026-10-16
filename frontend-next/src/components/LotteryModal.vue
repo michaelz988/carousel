@@ -21,6 +21,16 @@ const poasStats = ref([])
 const poasAssigned = ref(0)
 const saving = ref(false)
 
+// The entries as last loaded from or saved to the server, so Save only lights
+// up when there is something new to save.
+const savedSnapshot = ref('')
+function snapshot() {
+  return JSON.stringify(
+    lotteryEntries.value.map((e) => [e.name, e.biography, e.statement]),
+  )
+}
+const hasChanges = computed(() => snapshot() !== savedSnapshot.value)
+
 const activeAssignment = computed(() => auth.activeAssignment)
 
 const isMaxEntries = computed(
@@ -32,7 +42,7 @@ const delDisabled = computed(
 )
 
 const submitDisabled = computed(() => {
-  if (saving.value) return true
+  if (saving.value || !hasChanges.value) return true
   for (const entry of lotteryEntries.value) {
     if (!entry.name) return true
     if (!entry.biography || entry.biography.length <= 1) return true
@@ -84,6 +94,7 @@ function refresh(result) {
     addEntry()
     count++
   }
+  savedSnapshot.value = snapshot()
 }
 
 async function submitEntries() {
@@ -195,7 +206,7 @@ function close() {
           Person of American Significance (commonly known name)
         </label>
         <input
-          v-model.trim.lazy="entry.name"
+          v-model.trim="entry.name"
           type="text"
           maxlength="100"
           placeholder="e.g. Harriet Tubman"
@@ -241,7 +252,7 @@ function close() {
           <span class="font-normal text-ink-400">(max 100 characters)</span>
         </label>
         <input
-          v-model.lazy="entry.biography"
+          v-model="entry.biography"
           type="text"
           maxlength="100"
           :disabled="isLocked"
@@ -253,7 +264,7 @@ function close() {
           <span class="font-normal text-ink-400">(max 250 characters)</span>
         </label>
         <textarea
-          v-model.lazy="entry.statement"
+          v-model="entry.statement"
           rows="2"
           maxlength="250"
           :disabled="isLocked"

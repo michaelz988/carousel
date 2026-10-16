@@ -39,10 +39,29 @@ exports.create = async (req, res) => {
       return;
     }
 
+    // Resolve every name before touching the saved entries. Wikipedia
+    // rate-limits these lookups, and a failure halfway through used to leave
+    // the student with no entries at all. Names that are already POAS titles
+    // -- every entry the form loaded back from an earlier save -- come from
+    // the database without asking Wikipedia again.
+    const resolved = [];
+    for (const entry of lotteries) {
+      const poas = await Poas.findOne({ where: { name: entry.name } })
+        || await poasController.findOrCreate(entry.name);
+      if (!poas) {
+        res.status(503).send({
+          message: "Couldn't check those names with Wikipedia just now. Your entries were not changed. Please try saving again in a minute."
+        });
+        return;
+      }
+      resolved.push(poas);
+    }
+
+    // Each saved entry already records its POAS, so no lookup is needed here.
     let old_lotteries = await user_assignment.getLotteries();
     for (let entry of old_lotteries) {
-      let poas = await poasController.findOrCreate(entry.name);
-      await paController.delLottery(assignmentId, poas, entry.preference, entry);
+      const poas = await Poas.findByPk(entry.poaId);
+      if (poas) await paController.delLottery(assignmentId, poas, entry.preference, entry);
       await entry.destroy({ force: true });
     };
     await user_assignment.setPoa(null);
@@ -53,14 +72,20 @@ exports.create = async (req, res) => {
 
     for (let i = 0; i < lotteries.length; i++) {
       const entry = lotteries[i];
-      entry.preference = i + 1;
-      let poas = await poasController.findOrCreate(entry.name);
-      entry.wikiPageID = poas.wikiPageID;
-      entry.wikiLink = poas.wikiLink;
-      entry.wikiDescription = poas.wikiDescription;
-      let lottery = await Lottery.create(entry);
+      const poas = resolved[i];
+      // Only what the student writes. The form posts back the rows it loaded,
+      // ids and links included, and those belong to the entries just deleted.
+      let lottery = await Lottery.create({
+        name: entry.name,
+        biography: entry.biography,
+        statement: entry.statement,
+        preference: i + 1,
+        wikiPageID: poas.wikiPageID,
+        wikiLink: poas.wikiLink,
+        wikiDescription: poas.wikiDescription
+      });
       await poas.addLottery(lottery.id);
-      await paController.addLottery(assignmentId, poas, entry.preference, lottery);
+      await paController.addLottery(assignmentId, poas, i + 1, lottery);
       await user_assignment.addLottery(lottery.id);
       await poas.save();
       await user_assignment.save();

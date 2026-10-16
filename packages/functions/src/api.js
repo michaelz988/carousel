@@ -29,6 +29,9 @@ require("./routes/lottery.routes")(app);
 require("./routes/poas.routes")(app);
 require("./routes/file.routes")(app);
 
+// Exported for dev.js, which serves the same app locally.
+exports.app = app;
+
 const serverlessExpressInstance = serverlessExpress({ app });
 
 exports.handler = async (event, context) => {
