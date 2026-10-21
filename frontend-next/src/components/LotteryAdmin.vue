@@ -177,10 +177,25 @@ function toggleDetails() {
   }
 }
 
+// The entry the lottery assigned. Entries arrive in no particular order, so
+// find it by its flag rather than by position.
+function assignedEntry(item) {
+  return item.lotteries?.find((lottery) => lottery.assigned) ?? null
+}
+
+// Spreadsheets split pasted text on tabs and newlines; a field in quotes may
+// contain either, with its own quotes doubled.
+function cell(value) {
+  const text = String(value ?? '')
+  return /[\t\r\n"]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
+}
+
 async function copyResults() {
   const header = ['#', 'Student', 'Teacher', 'Period', 'POAS assigned']
-  const lines = students.value.map((item, i) =>
-    [
+  // With all details showing, also copy what the details rows show.
+  if (detailShowing.value) header.push('Biography', 'Significance')
+  const lines = students.value.map((item, i) => {
+    const row = [
       i + 1,
       item.Student?.lastName
         ? `${item.Student.firstName} ${item.Student.lastName}`
@@ -188,8 +203,13 @@ async function copyResults() {
       item.ClassTeacher?.Teacher?.lastName ?? '',
       item.period ?? '',
       item.poa ? item.poa.name : `${item.lotteries?.length ?? 0} entries`,
-    ].join('\t'),
-  )
+    ]
+    if (detailShowing.value) {
+      const lottery = assignedEntry(item)
+      row.push(lottery?.biography, lottery?.statement)
+    }
+    return row.map(cell).join('\t')
+  })
   const text = [header.join('\t'), ...lines].join('\n')
 
   try {
@@ -320,19 +340,11 @@ onMounted(async () => {
         <dl class="grid gap-2 text-sm sm:grid-cols-[120px_minmax(0,1fr)]">
           <dt class="font-semibold text-ink-600">Biography</dt>
           <dd class="text-ink-700">
-            {{
-              item.preferenceChosen
-                ? item.lotteries[item.preferenceChosen - 1]?.biography
-                : '—'
-            }}
+            {{ assignedEntry(item)?.biography ?? '—' }}
           </dd>
           <dt class="font-semibold text-ink-600">Significance</dt>
           <dd class="text-ink-700">
-            {{
-              item.preferenceChosen
-                ? item.lotteries[item.preferenceChosen - 1]?.statement
-                : '—'
-            }}
+            {{ assignedEntry(item)?.statement ?? '—' }}
           </dd>
         </dl>
       </template>
