@@ -7,6 +7,23 @@ var jwt = require("jsonwebtoken");
 
 const JWT_SECRET = process.env.JWT_SECRET || "code4real-secret-key";
 
+// Rosters are typed by hand, but Google sends the address lowercase and, for
+// Gmail, spelled the way the account was created. Gmail ignores case and dots
+// before the @; other domains (school accounts) ignore only case. Production's
+// email column compares exactly (utf8mb4_bin), so both sides are normalized.
+const GMAIL_DOMAINS = ["gmail.com", "googlemail.com"];
+
+function emailKey(address) {
+  const [local, domain] = address.toLowerCase().split("@");
+  return GMAIL_DOMAINS.includes(domain) ? `${local.replace(/\./g, "")}@gmail.com` : `${local}@${domain}`;
+}
+
+const storedEmailKey = db.sequelize.literal(
+  "CASE WHEN LOWER(SUBSTRING_INDEX(email, '@', -1)) IN ('gmail.com', 'googlemail.com') " +
+  "THEN CONCAT(REPLACE(LOWER(SUBSTRING_INDEX(email, '@', 1)), '.', ''), '@gmail.com') " +
+  "ELSE LOWER(email) END"
+);
+
 exports.signin = async (req, res) => {
   let id_token = req.body.credential;
 
@@ -31,6 +48,14 @@ exports.signin = async (req, res) => {
         lastName: payload['family_name']
       }
     });
+
+    // An exact match wins, so an address that already signs in keeps its row.
+    if (!user) {
+      user = await User.findOne({
+        where: db.sequelize.where(storedEmailKey, emailKey(gmail)),
+        order: [['userId', 'ASC']]
+      });
+    }
 
     if (!user) {
       return res.status(404).send({ message: "User not registered in the system." });
