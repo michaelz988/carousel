@@ -136,7 +136,8 @@ function collapseAll() {
   expanded.value = new Set()
 }
 
-defineExpose({ expandAll, collapseAll })
+// `rows` is what the table shows: filtered and sorted, for callers that copy it.
+defineExpose({ expandAll, collapseAll, rows })
 </script>
 
 <template>
