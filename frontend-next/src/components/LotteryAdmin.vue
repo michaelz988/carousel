@@ -194,7 +194,9 @@ async function copyResults() {
   const header = ['#', 'Student', 'Teacher', 'Period', 'POAS assigned']
   // With all details showing, also copy what the details rows show.
   if (detailShowing.value) header.push('Biography', 'Significance')
-  const lines = students.value.map((item, i) => {
+  // Copy the rows as shown: the teacher filter and sort order apply.
+  const shown = tableRef.value?.rows ?? students.value
+  const lines = shown.map((item, i) => {
     const row = [
       i + 1,
       item.Student?.lastName
