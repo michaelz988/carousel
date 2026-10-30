@@ -196,6 +196,16 @@ function cell(value) {
   return /[\t\r\n"]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
 }
 
+// Google Sheets pastes an HTML table with its cell styles, so cells wrap.
+function htmlCell(value, tag = 'td') {
+  const text = String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\r?\n/g, '<br>')
+  return `<${tag} style="white-space:normal;word-wrap:break-word;vertical-align:top">${text}</${tag}>`
+}
+
 async function copyResults() {
   const header = ['#', 'Student', 'Teacher', 'Period', 'POAS assigned']
   // With all details showing, also copy what the details rows show.
@@ -208,7 +218,7 @@ async function copyResults() {
   }
   // Copy the rows as shown: the teacher filter and sort order apply.
   const shown = tableRef.value?.rows ?? students.value
-  const lines = shown.map((item, i) => {
+  const rows = shown.map((item, i) => {
     const row = [
       i + 1,
       item.Student?.lastName
@@ -224,12 +234,27 @@ async function copyResults() {
         row.push(lottery.name, lottery.biography, lottery.statement)
       }
     }
-    return row.map(cell).join('\t')
+    return row
   })
-  const text = [header.join('\t'), ...lines].join('\n')
+  const text = [header, ...rows].map((row) => row.map(cell).join('\t')).join('\n')
+  const html =
+    '<table>' +
+    `<tr>${header.map((h) => htmlCell(h, 'th')).join('')}</tr>` +
+    rows.map((row) => `<tr>${row.map((v) => htmlCell(v)).join('')}</tr>`).join('') +
+    '</table>'
 
   try {
-    await navigator.clipboard.writeText(text)
+    // Apps that ignore HTML paste the tab-separated text, as before.
+    if (window.ClipboardItem) {
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'text/plain': new Blob([text], { type: 'text/plain' }),
+          'text/html': new Blob([html], { type: 'text/html' }),
+        }),
+      ])
+    } else {
+      await navigator.clipboard.writeText(text)
+    }
     notify('Lottery results copied to clipboard.', 'info')
   } catch {
     notify('Could not copy to clipboard.')
