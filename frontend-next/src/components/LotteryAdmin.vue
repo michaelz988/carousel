@@ -199,11 +199,11 @@ function cell(value) {
 async function copyResults() {
   const header = ['#', 'Student', 'Teacher', 'Period', 'POAS assigned']
   // With all details showing, also copy what the details rows show.
-  // Choices first gives how many entries the student made.
+  // # of Choices first gives how many entries the student made.
   if (detailShowing.value) {
-    header.push('Choices')
+    header.push('# of Choices')
     for (let n = 1; n <= maxChoices.value; n++) {
-      header.push(`Choice ${n}`, `Choice ${n} biography`, `Choice ${n} significance`)
+      header.push(`Choice ${n}`, `Choice ${n} Biography`, `Choice ${n} Significance`)
     }
   }
   // Copy the rows as shown: the teacher filter and sort order apply.
