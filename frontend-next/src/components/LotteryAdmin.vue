@@ -177,11 +177,17 @@ function toggleDetails() {
   }
 }
 
-// The entry the lottery assigned. Entries arrive in no particular order, so
-// find it by its flag rather than by position.
-function assignedEntry(item) {
-  return item.lotteries?.find((lottery) => lottery.assigned) ?? null
+// The student's entries in the order they ranked them. Entries arrive in no
+// particular order, so sort by preference rather than trust position.
+function choices(item) {
+  return [...(item.lotteries ?? [])].sort((a, b) => a.preference - b.preference)
 }
+
+// One column per choice, as many as the student with the most entries, so
+// each choice lines up across students in the details and in Copy.
+const maxChoices = computed(() =>
+  Math.max(0, ...students.value.map((s) => s.lotteries?.length ?? 0)),
+)
 
 // Spreadsheets split pasted text on tabs and newlines; a field in quotes may
 // contain either, with its own quotes doubled.
@@ -190,13 +196,29 @@ function cell(value) {
   return /[\t\r\n"]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
 }
 
+// Google Sheets pastes an HTML table with its cell styles, so cells wrap.
+function htmlCell(value, tag = 'td') {
+  const text = String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\r?\n/g, '<br>')
+  return `<${tag} style="white-space:normal;word-wrap:break-word;vertical-align:top">${text}</${tag}>`
+}
+
 async function copyResults() {
   const header = ['#', 'Student', 'Teacher', 'Period', 'POAS assigned']
   // With all details showing, also copy what the details rows show.
-  if (detailShowing.value) header.push('Biography', 'Significance')
+  // # of Choices first gives how many entries the student made.
+  if (detailShowing.value) {
+    header.push('# of Choices')
+    for (let n = 1; n <= maxChoices.value; n++) {
+      header.push(`Choice ${n}`, `Choice ${n} Biography`, `Choice ${n} Significance`)
+    }
+  }
   // Copy the rows as shown: the teacher filter and sort order apply.
   const shown = tableRef.value?.rows ?? students.value
-  const lines = shown.map((item, i) => {
+  const rows = shown.map((item, i) => {
     const row = [
       i + 1,
       item.Student?.lastName
@@ -207,15 +229,36 @@ async function copyResults() {
       item.poa ? item.poa.name : `${item.lotteries?.length ?? 0} entries`,
     ]
     if (detailShowing.value) {
-      const lottery = assignedEntry(item)
-      row.push(lottery?.biography, lottery?.statement)
+      row.push(item.lotteries?.length ?? 0)
+      for (const lottery of choices(item)) {
+        row.push(lottery.name, lottery.biography, lottery.statement)
+      }
     }
-    return row.map(cell).join('\t')
+    return row
   })
-  const text = [header.join('\t'), ...lines].join('\n')
+  const text = [header, ...rows].map((row) => row.map(cell).join('\t')).join('\n')
+  // Wider columns for the long text, so wrapped rows stay a readable height.
+  const cols = header
+    .map((h) => (/ (Biography|Significance)$/.test(h) ? '<col width="300">' : '<col>'))
+    .join('')
+  const html =
+    `<table><colgroup>${cols}</colgroup>` +
+    `<tr>${header.map((h) => htmlCell(h, 'th')).join('')}</tr>` +
+    rows.map((row) => `<tr>${row.map((v) => htmlCell(v)).join('')}</tr>`).join('') +
+    '</table>'
 
   try {
-    await navigator.clipboard.writeText(text)
+    // Apps that ignore HTML paste the tab-separated text, as before.
+    if (window.ClipboardItem) {
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'text/plain': new Blob([text], { type: 'text/plain' }),
+          'text/html': new Blob([html], { type: 'text/html' }),
+        }),
+      ])
+    } else {
+      await navigator.clipboard.writeText(text)
+    }
     notify('Lottery results copied to clipboard.', 'info')
   } catch {
     notify('Could not copy to clipboard.')
@@ -339,16 +382,24 @@ onMounted(async () => {
       </template>
 
       <template #row-details="{ item }">
-        <dl class="grid gap-2 text-sm sm:grid-cols-[120px_minmax(0,1fr)]">
-          <dt class="font-semibold text-ink-600">Biography</dt>
-          <dd class="text-ink-700">
-            {{ assignedEntry(item)?.biography ?? '—' }}
-          </dd>
-          <dt class="font-semibold text-ink-600">Significance</dt>
-          <dd class="text-ink-700">
-            {{ assignedEntry(item)?.statement ?? '—' }}
-          </dd>
-        </dl>
+        <!-- Choices left to right in the student's order -->
+        <div
+          v-if="item.lotteries?.length"
+          class="grid gap-4 text-sm sm:grid-cols-[repeat(var(--choices),minmax(0,1fr))]"
+          :style="{ '--choices': maxChoices }"
+        >
+          <section v-for="(lottery, n) in choices(item)" :key="lottery.id">
+            <p class="text-xs font-semibold text-ink-500">Choice {{ n + 1 }}</p>
+            <p class="font-semibold text-ink-900">{{ lottery.name }}</p>
+            <dl class="mt-2 grid gap-1">
+              <dt class="font-semibold text-ink-600">Biography</dt>
+              <dd class="text-ink-700">{{ lottery.biography || '—' }}</dd>
+              <dt class="mt-1 font-semibold text-ink-600">Significance</dt>
+              <dd class="text-ink-700">{{ lottery.statement || '—' }}</dd>
+            </dl>
+          </section>
+        </div>
+        <p v-else class="text-sm text-ink-400">No entries.</p>
       </template>
     </DataTable>
 
