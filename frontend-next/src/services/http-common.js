@@ -41,6 +41,11 @@ http.interceptors.response.use(
         useAuthStore().isAuthenticated &&
         router.currentRoute.value.path !== '/login'
       ) {
+        // A 401 means the token expired or is invalid. Clear the persisted
+        // session, or the router guard sends a still-"signed-in" user from
+        // /login straight back home, where every request fails again.
+        // 403 is left alone: it also means a role check failed.
+        if (status === 401) useAuthStore().$reset()
         router.push('/login')
       }
     } else if ((status === 409 || status === 503) && error.response.data?.message) {
