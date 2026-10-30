@@ -237,8 +237,12 @@ async function copyResults() {
     return row
   })
   const text = [header, ...rows].map((row) => row.map(cell).join('\t')).join('\n')
+  // Wider columns for the long text, so wrapped rows stay a readable height.
+  const cols = header
+    .map((h) => (/ (Biography|Significance)$/.test(h) ? '<col width="300">' : '<col>'))
+    .join('')
   const html =
-    '<table>' +
+    `<table><colgroup>${cols}</colgroup>` +
     `<tr>${header.map((h) => htmlCell(h, 'th')).join('')}</tr>` +
     rows.map((row) => `<tr>${row.map((v) => htmlCell(v)).join('')}</tr>`).join('') +
     '</table>'
